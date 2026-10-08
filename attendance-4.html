@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e8e8eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Attendance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e8e8eb;
+  --ink:#1c1c20;
+  --ink2:#63636c;
+  --ink3:#8c8c95;
+  --orange:#f07a00;
+  --orange-ink:#c25200;
+  --orange-grad:linear-gradient(160deg,#ffa22e 0%,#ee6a00 100%);
+  --amber:#f5b800;
+  --white:rgba(255,255,255,.9);
+  --shadow:0 10px 30px rgba(40,40,80,.08);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;min-height:100vh;color:var(--ink);
+  font-family:'Urbanist',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:linear-gradient(180deg,#ececef 0%,#e4e4e8 100%);
+  padding:max(14px,env(safe-area-inset-top)) 16px 130px;
+}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+h1,h2,p{margin:0}
+svg{display:block}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ic.sm{width:18px;height:18px}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+
+/* ---------- backdrop: soft blue-grey blobs ---------- */
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.bg i{position:absolute;border-radius:50%;background:#8b91b8;filter:blur(26px);opacity:.5}
+.bg .b1{width:190px;height:190px;left:-70px;top:150px}
+.bg .b2{width:150px;height:150px;right:-50px;top:-30px;opacity:.4}
+.bg .b3{width:170px;height:170px;right:-60px;top:46%}
+.bg .b4{width:130px;height:130px;left:12%;top:62%;opacity:.35}
+.bg .b5{width:210px;height:210px;left:30%;bottom:-90px}
+.bg .b6{width:110px;height:110px;left:-30px;bottom:24%;opacity:.4}
+
+.app{width:min(480px,100%);margin:0 auto}
+
+/* ---------- surfaces ---------- */
+.card{
+  background:linear-gradient(150deg,rgba(255,255,255,.78),rgba(255,255,255,.4));
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,.92);
+  border-radius:30px;
+  box-shadow:var(--shadow),inset 0 1px 0 #fff,inset 0 -1px 0 rgba(40,40,80,.03);
+  padding:18px;
+}
+.stack{display:grid;gap:14px}
+.muted{color:var(--ink2);font-size:.92rem;line-height:1.45}
+.small{color:var(--ink3);font-size:.82rem;line-height:1.4}
+
+/* ---------- header ---------- */
+.head{display:grid;grid-template-columns:52px 1fr 52px;align-items:center;gap:10px;margin-bottom:22px}
+.head h1{text-align:center;font-size:1.3rem;font-weight:600}
+.circle{
+  position:relative;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(150deg,#fff,#ececf0);
+  border:1px solid rgba(255,255,255,.95);
+  box-shadow:0 6px 16px rgba(40,40,80,.12),inset 0 1px 0 #fff;
+  color:var(--ink);transition:transform .1s;
+}
+.circle:active{transform:scale(.94)}
+.circle input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border-radius:50%}
+.badge{
+  position:absolute;top:-5px;right:-4px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;
+  background:var(--orange-grad);color:#fff;font-weight:700;font-size:.78rem;
+  display:grid;place-items:center;box-shadow:0 3px 8px rgba(238,106,0,.4);
+}
+
+/* ---------- date row + week strip ---------- */
+.daterow{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.daterow h2{font-size:1.2rem;font-weight:600}
+.arrows{display:flex;gap:8px}
+.mini{
+  width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(150deg,#fff,#ececf0);border:1px solid rgba(255,255,255,.95);
+  box-shadow:0 4px 10px rgba(40,40,80,.1),inset 0 1px 0 #fff;
+}
+.mini:active{transform:scale(.93)}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px}
+.day{
+  display:grid;justify-items:center;gap:2px;padding:10px 0 8px;border-radius:20px;
+  background:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.65);
+  color:var(--ink2);transition:background .2s,box-shadow .2s;
+}
+.day span{font-size:.8rem;font-weight:500}
+.day b{font-size:1.15rem;font-weight:600;color:var(--ink)}
+.day em{width:6px;height:6px;border-radius:50%;background:var(--orange);visibility:hidden;margin-top:2px}
+.day.has em{visibility:visible}
+.day[aria-pressed="true"]{
+  background:linear-gradient(180deg,#fff,rgba(255,255,255,.72));border-color:#fff;
+  box-shadow:0 10px 20px rgba(40,40,80,.14),inset 0 1px 0 #fff;color:var(--ink);
+  transform:translateY(-3px);padding-bottom:10px;
+}
+.day[aria-pressed="true"] span{color:var(--ink2)}
+
+/* ---------- filter chips ---------- */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:8px 16px 34px;margin:-4px -16px -22px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;display:flex;align-items:center;gap:6px;padding:10px 15px;border-radius:999px;
+  background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.95);
+  box-shadow:0 4px 12px rgba(40,40,80,.06),inset 0 1px 0 #fff;
+  color:var(--ink2);font-weight:600;font-size:.95rem;
+}
+.chip small{font-size:.82rem;font-weight:600;color:var(--ink3)}
+.chip[aria-pressed="true"]{
+  color:var(--orange-ink);border-color:rgba(240,122,0,.5);background:rgba(255,255,255,.85);
+  box-shadow:0 6px 16px rgba(240,122,0,.2),inset 0 1px 0 #fff;
+}
+.chip[aria-pressed="true"] small{color:var(--orange-ink)}
+
+/* ---------- summary card ---------- */
+.summary{margin-bottom:22px}
+.sum-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sum-big{display:flex;align-items:baseline;gap:8px;margin-top:6px}
+.sum-big b{font-size:3.2rem;font-weight:600;line-height:1;letter-spacing:-.02em}
+.sum-big span{color:var(--ink2);font-size:1.05rem}
+.ring{position:relative;width:104px;height:104px;flex:none}
+.ring svg{width:104px;height:104px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:9;stroke-linecap:round}
+.ring .track{stroke:rgba(40,40,80,.1)}
+.ring .val{stroke:url(#og);transition:stroke-dashoffset .5s ease}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:1.15rem;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:18px}
+.stat{padding:12px;border-radius:20px;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.8)}
+.stat p{font-weight:600;font-size:.95rem}
+.stat small{display:block;color:var(--ink2);font-size:.8rem;margin:2px 0 9px}
+.bar{height:7px;border-radius:4px;background:rgba(40,40,80,.1);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:4px;transition:width .4s ease}
+
+/* ---------- section titles ---------- */
+.sec{display:flex;justify-content:space-between;align-items:center;margin:0 0 12px}
+.sec h2{font-size:1.2rem;font-weight:600}
+.sec h2 small{font-size:.9rem;color:var(--ink3);font-weight:500;margin-left:4px}
+.pill{
+  display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:999px;
+  background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.95);
+  box-shadow:0 4px 12px rgba(40,40,80,.07),inset 0 1px 0 #fff;font-weight:600;font-size:.92rem;
+}
+.pill:active{transform:scale(.96)}
+.pill.warn{color:var(--orange-ink)}
+
+/* ---------- student rows ---------- */
+.list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.row{
+  display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;width:100%;text-align:left;
+  padding:10px 10px 10px 10px;border-radius:22px;min-height:68px;
+  background:linear-gradient(150deg,rgba(255,255,255,.74),rgba(255,255,255,.4));
+  border:1px solid rgba(255,255,255,.92);
+  box-shadow:0 6px 18px rgba(40,40,80,.06),inset 0 1px 0 #fff;
+  transition:background .2s,border-color .2s,transform .1s;
+}
+.row:active{transform:scale(.985)}
+.rn{
+  width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+  font-weight:700;font-size:.9rem;color:#3a3a42;
+  background:linear-gradient(150deg,#fff,#e3e3e8);
+  box-shadow:0 4px 10px rgba(40,40,80,.12),inset 0 1px 0 #fff;
+}
+.rt{min-width:0}
+.rt b{display:block;font-weight:600;font-size:.86rem;line-height:1.25;overflow-wrap:anywhere}
+.rt i{display:block;font-style:normal;font-size:.78rem;color:var(--ink2);margin-top:1px}
+.ri{display:none}
+.row[data-s="A"]{background:linear-gradient(150deg,rgba(255,150,40,.3),rgba(255,150,40,.1));border-color:rgba(240,122,0,.5)}
+.row[data-s="A"] .rn{background:var(--orange-grad);color:#fff;box-shadow:0 5px 12px rgba(238,106,0,.4)}
+.row[data-s="A"] .rt i{color:#a84400;font-weight:600}
+.row[data-s="A"] .ri{color:var(--orange-ink)}
+.row[data-s="O"]{background:linear-gradient(150deg,rgba(245,184,0,.32),rgba(245,184,0,.1));border-color:rgba(225,165,0,.6)}
+.row[data-s="O"] .rn{background:linear-gradient(150deg,#ffd43d,#f0a800);color:#3d2a00;box-shadow:0 5px 12px rgba(240,168,0,.4)}
+.row[data-s="O"] .rt i{color:#7a5600;font-weight:600}
+.row[data-s="O"] .ri{color:#946700}
+.none{grid-column:1 / -1;padding:26px 10px;text-align:center}
+
+/* ---------- message / template ---------- */
+textarea{
+  font:inherit;color:var(--ink);width:100%;resize:vertical;line-height:1.55;
+  background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.95);border-radius:20px;padding:14px;
+  box-shadow:inset 0 2px 6px rgba(40,40,80,.06);
+}
+#msg{min-height:210px}
+#tpl{min-height:160px}
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  background:var(--orange-grad);color:#fff;font-weight:700;font-size:1.05rem;
+  padding:16px;border-radius:22px;border:1px solid rgba(255,255,255,.5);
+  box-shadow:0 10px 24px rgba(238,106,0,.35),inset 0 1px 0 rgba(255,255,255,.5);
+}
+.btn:active{transform:scale(.98)}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{
+  padding:8px 13px;border-radius:999px;font-weight:600;font-size:.88rem;color:var(--ink2);
+  background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.95);
+  box-shadow:0 3px 8px rgba(40,40,80,.06),inset 0 1px 0 #fff;
+}
+.tag:hover{color:var(--orange-ink)}
+.opts{display:grid;gap:9px}
+.opt{
+  display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;
+  padding:14px 16px;border-radius:20px;font-weight:600;
+  background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.9);
+  box-shadow:inset 0 1px 0 #fff;
+}
+.opt span{color:var(--ink3)}
+.opt[aria-pressed="true"]{border-color:rgba(240,122,0,.5);background:rgba(255,255,255,.85)}
+.opt[aria-pressed="true"] span{color:var(--orange)}
+.preview{
+  white-space:pre-wrap;line-height:1.6;font-size:.98rem;padding:16px;border-radius:20px;
+  background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.9);overflow-wrap:anywhere;
+}
+
+/* ---------- floating dock ---------- */
+.dock{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom));
+  width:min(330px,calc(100% - 32px));z-index:10;
+  display:flex;justify-content:space-around;align-items:center;padding:9px;border-radius:999px;
+  background:linear-gradient(150deg,rgba(255,255,255,.85),rgba(255,255,255,.6));
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.95);
+  box-shadow:0 14px 34px rgba(40,40,80,.16),inset 0 1px 0 #fff;
+}
+.dock button{
+  width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:#3a3a42;
+  transition:background .2s,color .2s,box-shadow .2s;
+}
+.dock button[aria-selected="true"]{
+  background:var(--orange-grad);color:#fff;box-shadow:0 8px 18px rgba(238,106,0,.45);
+}
+.dock .ic{width:24px;height:24px}
+
+.toast{
+  position:fixed;left:50%;top:max(16px,env(safe-area-inset-top));transform:translate(-50%,-90px);z-index:30;
+  width:max-content;max-width:calc(100vw - 32px);text-align:center;
+  padding:12px 20px;border-radius:999px;font-weight:600;font-size:.92rem;
+  background:rgba(255,255,255,.92);border:1px solid #fff;box-shadow:0 10px 26px rgba(40,40,80,.18);
+  transition:transform .3s cubic-bezier(.2,.9,.3,1.2);
+}
+.toast.show{transform:translate(-50%,0)}
+
+@media (max-width:380px){
+  .sum-big b{font-size:2.6rem}
+  .ring,.ring svg{width:92px;height:92px}
+  .stat{padding:10px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .card,.dock{background:rgba(250,250,252,.95)}
+}
+
+/* =====================================================================
+   LIQUID GLASS BUTTONS (iOS 26 style)
+   clear glass: refracts + blurs what is behind it, bright curved rim
+   tinted glass: orange body for the main actions
+   ===================================================================== */
+@property --glow{syntax:'<number>';inherits:false;initial-value:0}
+
+.circle,.mini,.chip,.pill,.tag,.opt,.btn,.day[aria-pressed="true"],.dock button[aria-selected="true"]{position:relative}
+
+.circle,.mini,.chip,.pill,.tag,.opt,.btn,.dock,.day[aria-pressed="true"],.dock button[aria-selected="true"]{
+  isolation:isolate;
+  border:0;
+  background:
+    radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,calc(var(--glow) * .95)) 0%,rgba(255,255,255,0) 64%),
+    linear-gradient(160deg,rgba(255,255,255,.42) 0%,rgba(255,255,255,.12) 52%,rgba(255,255,255,.26) 100%);
+  -webkit-backdrop-filter:blur(3px) saturate(1.9) brightness(1.04);
+  backdrop-filter:blur(3px) saturate(1.9) brightness(1.04);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.55),
+    inset 2px 3px 4px -2px rgba(255,255,255,1),
+    inset -2px -3px 5px -3px rgba(255,255,255,.75),
+    inset -1px -1.5px 1px rgba(105,112,170,.16),
+    inset 0 0 18px rgba(255,255,255,.3),
+    0 12px 26px -8px rgba(35,35,85,.3),
+    0 2px 5px rgba(35,35,85,.1);
+  transition:transform .5s cubic-bezier(.34,1.56,.64,1),--glow .35s ease,box-shadow .3s ease,background-color .3s;
+  -webkit-user-select:none;user-select:none;
+}
+/* curved rim: bright at top-left and bottom-right, clear in between */
+.circle::before,.mini::before,.chip::before,.pill::before,.tag::before,.opt::before,.btn::before,.dock::before,
+.day[aria-pressed="true"]::before,.dock button[aria-selected="true"]::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;z-index:-1;pointer-events:none;
+  background:linear-gradient(140deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.15) 38%,rgba(255,255,255,0) 58%,rgba(255,255,255,.8) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+}
+/* soft specular gloss across the top */
+.circle::after,.mini::after,.chip::after,.pill::after,.tag::after,.opt::after,.btn::after,.dock::after,
+.day[aria-pressed="true"]::after,.dock button[aria-selected="true"]::after{
+  content:"";position:absolute;left:11%;right:11%;top:5%;height:42%;border-radius:999px;z-index:-1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,0));
+}
+.dock::after{left:6%;right:6%;height:38%}
+
+/* press: the glass swells and lights up under your finger */
+.circle:active,.mini:active,.chip:active,.pill:active,.tag:active,.opt:active,.day:active{transform:scale(1.09);--glow:1}
+.btn:active{transform:scale(1.035);--glow:1}
+.dock button:active{transform:scale(1.1);--glow:1}
+.circle:active,.mini:active,.pill:active{box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.8),inset 2px 3px 5px -2px #fff,inset -2px -3px 6px -3px rgba(255,255,255,.9),
+    inset 0 0 22px rgba(255,255,255,.5),0 16px 30px -8px rgba(35,35,85,.34),0 2px 6px rgba(35,35,85,.12)}
+
+/* ----- tinted (orange) glass: main actions ----- */
+.btn,#shareTop,.dock button[aria-selected="true"]{
+  color:#fff;
+  background:
+    radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,235,200,calc(var(--glow) * .9)) 0%,rgba(255,235,200,0) 64%),
+    linear-gradient(160deg,rgba(255,176,70,.9) 0%,rgba(244,118,8,.84) 60%,rgba(236,98,0,.88) 100%);
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,218,168,.85),
+    inset 2px 3px 5px -2px rgba(255,255,255,.95),
+    inset -2px -3px 6px -2px rgba(255,205,130,.65),
+    inset 0 0 18px rgba(255,196,110,.5),
+    0 14px 28px -8px rgba(238,106,0,.6),
+    0 2px 6px rgba(150,60,0,.25);
+}
+.btn{text-shadow:0 1px 2px rgba(150,60,0,.35)}
+.btn:active,#shareTop:active,.dock button[aria-selected="true"]:active{box-shadow:
+    inset 0 0 0 1px rgba(255,230,195,1),inset 2px 3px 6px -2px #fff,inset -2px -3px 7px -2px rgba(255,215,150,.9),
+    inset 0 0 24px rgba(255,210,130,.7),0 18px 32px -8px rgba(238,106,0,.7),0 2px 6px rgba(150,60,0,.25)}
+#shareTop::after{left:14%;right:14%}
+
+.badge{
+  background:linear-gradient(160deg,#ffb04a,#ee6a00);
+  box-shadow:inset 0 0 0 1px rgba(255,225,185,.9),inset 1px 2px 3px -1px #fff,0 4px 10px rgba(238,106,0,.5);
+}
+
+/* ----- selected chip / option: light orange tint over clear glass ----- */
+.chip[aria-pressed="true"],.opt[aria-pressed="true"]{
+  color:#7a3300;
+  background:
+    radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,calc(var(--glow) * .9)) 0%,rgba(255,255,255,0) 64%),
+    linear-gradient(160deg,rgba(255,184,90,.62) 0%,rgba(244,122,10,.34) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,190,110,.9),
+    inset 2px 3px 4px -2px rgba(255,255,255,.95),
+    inset -2px -3px 5px -3px rgba(255,170,70,.7),
+    inset 0 0 16px rgba(255,170,70,.35),
+    0 12px 24px -8px rgba(238,106,0,.45),0 2px 5px rgba(150,60,0,.12);
+}
+.chip[aria-pressed="true"] small{color:#7a3300}
+.opt[aria-pressed="true"] span{color:#c25200}
+.day[aria-pressed="true"]{transform:translateY(-3px)}
+.day[aria-pressed="true"]:active{transform:translateY(-3px) scale(1.07)}
+.dock{border:0}
+.dock button{transition:transform .5s cubic-bezier(.34,1.56,.64,1),--glow .35s ease,box-shadow .3s ease}
+
+/* student number circles: little glass beads */
+.rn{box-shadow:0 4px 10px rgba(40,40,80,.12),inset 0 0 0 1px rgba(255,255,255,.7),inset 1.5px 2px 3px -1px #fff}
+.row[data-s="A"] .rn{box-shadow:inset 0 0 0 1px rgba(255,214,168,.9),inset 2px 3px 5px -2px rgba(255,255,255,.95),inset -2px -3px 6px -2px rgba(255,200,120,.65),0 6px 14px -2px rgba(238,106,0,.5)}
+.row[data-s="O"] .rn{box-shadow:inset 0 0 0 1px rgba(255,238,170,.95),inset 2px 3px 5px -2px rgba(255,255,255,.95),inset -2px -3px 6px -2px rgba(255,225,120,.7),0 6px 14px -2px rgba(240,168,0,.5)}
+
+/* ----- lens refraction: Chromium browsers (set by script) ----- */
+.lens .circle:not(#shareTop),.lens .mini,.lens .chip:not([aria-pressed="true"]),.lens .pill,.lens .tag,.lens .opt:not([aria-pressed="true"]),.lens .dock,.lens .day[aria-pressed="true"]{
+  -webkit-backdrop-filter:url(#lg-lens) blur(2px) saturate(1.9) brightness(1.04);
+  backdrop-filter:url(#lg-lens) blur(2px) saturate(1.9) brightness(1.04);
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .circle,.mini,.chip,.pill,.tag,.opt,.dock{background:rgba(250,250,252,.95)}
+}
+@media (prefers-reduced-motion:reduce){
+  .circle,.mini,.chip,.pill,.tag,.opt,.btn,.dock button{transition:none!important}
+  .circle:active,.mini:active,.chip:active,.pill:active,.tag:active,.opt:active,.btn:active,.dock button:active{transform:none}
+}
+
+/* ---------- UX fixes ---------- */
+:root{--ink3:#5f5f69}
+body{min-height:100dvh}
+.circle:has(input:focus-visible){outline:2px solid var(--orange);outline-offset:3px}
+.dock{width:min(270px,calc(100% - 32px));padding:6px}
+.dock button{width:68px;height:50px;border-radius:25px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.dock .ic{width:21px;height:21px}
+.dock button span{font-size:.64rem;font-weight:600;line-height:1;pointer-events:none}
+body{padding-bottom:110px}
+/* remove the hard-edged gloss bar on top of glass buttons */
+.circle::after,.mini::after,.chip::after,.pill::after,.tag::after,.opt::after,.btn::after,.dock::after,
+.day[aria-pressed="true"]::after,.dock button[aria-selected="true"]::after{display:none}
+
+/* ---------- MOTION: scroll reveal, page transitions, effects ---------- */
+body{overflow-x:clip}
+@keyframes rvIn{from{opacity:0;transform:translateY(22px) scale(.97)}to{opacity:1;transform:none}}
+.rv{opacity:0}
+.rv.in{opacity:1;animation:rvIn .6s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:var(--d,0ms)}
+
+@keyframes pgInR{from{transform:translateX(44px)}to{transform:none}}
+@keyframes pgInL{from{transform:translateX(-44px)}to{transform:none}}
+@keyframes pgOutL{from{opacity:1;transform:none}to{opacity:0;transform:translateX(-26px) scale(.985)}}
+@keyframes pgOutR{from{opacity:1;transform:none}to{opacity:0;transform:translateX(26px) scale(.985)}}
+.pg-r{animation:pgInR .6s cubic-bezier(.22,1,.36,1)}
+.pg-l{animation:pgInL .6s cubic-bezier(.22,1,.36,1)}
+.po-l{animation:pgOutL .18s cubic-bezier(.4,0,1,1) forwards;pointer-events:none}
+.po-r{animation:pgOutR .18s cubic-bezier(.4,0,1,1) forwards;pointer-events:none}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+@keyframes titleSwap{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#title.swap{animation:titleSwap .35s cubic-bezier(.2,.8,.2,1)}
+
+@keyframes pop{0%{transform:scale(.78)}55%{transform:scale(1.22)}100%{transform:scale(1)}}
+.row.pop .rn{animation:pop .42s cubic-bezier(.3,1.5,.5,1)}
+@keyframes bump{0%{transform:scale(.5)}60%{transform:scale(1.28)}100%{transform:scale(1)}}
+.badge.bump{animation:bump .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes dockPop{0%{transform:scale(.7) translateY(3px)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+.dock button[aria-selected="true"] svg{animation:dockPop .5s cubic-bezier(.3,1.6,.5,1)}
+
+.bg i{will-change:transform;transform:translate3d(0,calc(var(--sy,0) * var(--k,0) * 1px),0)}
+.bg .b1{--k:-.06}.bg .b2{--k:.10}.bg .b3{--k:-.12}.bg .b4{--k:.08}.bg .b5{--k:-.10}.bg .b6{--k:.14}
+
+/* zoom + cross-fade page transition (hero zoom from the tapped tab) */
+@keyframes xfInF{from{opacity:0;transform:scale(.84)}to{opacity:1;transform:none}}
+@keyframes xfInB{from{opacity:0;transform:scale(1.12)}to{opacity:1;transform:none}}
+@keyframes xfOutF{from{opacity:1;transform:none}to{opacity:0;transform:scale(1.12)}}
+@keyframes xfOutB{from{opacity:1;transform:none}to{opacity:0;transform:scale(.88)}}
+.xf-in,.xf-out{transform-origin:var(--ox,50%) var(--oy,100%)}
+.xf-in.xf-fwd{animation:xfInF .6s cubic-bezier(.22,1,.36,1)}
+.xf-in.xf-back{animation:xfInB .6s cubic-bezier(.22,1,.36,1)}
+.xf-out.xf-fwd{animation:xfOutF .38s cubic-bezier(.4,0,.2,1) forwards}
+.xf-out.xf-back{animation:xfOutB .38s cubic-bezier(.4,0,.2,1) forwards}
+
+/* reduced motion: keep gentle fades only (no sliding, popping or parallax) */
+@media (prefers-reduced-motion:reduce){
+  @keyframes rvIn{from{opacity:0}to{opacity:1}}
+  @keyframes pgInR{from{opacity:0}to{opacity:1}}
+  @keyframes pgInL{from{opacity:0}to{opacity:1}}
+  @keyframes xfInF{from{opacity:0}to{opacity:1}}
+  @keyframes xfInB{from{opacity:0}to{opacity:1}}
+  @keyframes xfOutF{from{opacity:1}to{opacity:0}}
+  @keyframes xfOutB{from{opacity:1}to{opacity:0}}
+  @keyframes pgOutL{from{opacity:1}to{opacity:0}}
+  @keyframes pgOutR{from{opacity:1}to{opacity:0}}
+  @keyframes titleSwap{from{opacity:0}to{opacity:1}}
+  .badge.bump,.row.pop .rn,.dock button svg{animation:none!important}
+  .bg i{transform:none!important}
+}
+
+/* ---------- name style slider ---------- */
+.seg{
+  --k:44px;--pad:6px;--spring:cubic-bezier(.3,1.2,.5,1);
+  position:relative;display:flex;align-items:stretch;height:58px;padding:0 var(--pad);border-radius:999px;
+  background:linear-gradient(150deg,rgba(255,255,255,.78),rgba(255,255,255,.4));
+  border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,inset 0 -2px 8px rgba(40,40,80,.06),0 10px 22px -8px rgba(40,40,80,.18);
+  -webkit-user-select:none;user-select:none;
+}
+.seg-clip{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none}
+.seg-fill{
+  position:absolute;left:0;top:0;bottom:0;width:130px;
+  background:linear-gradient(90deg,rgba(255,150,50,.85) 0%,rgba(255,170,80,.55) 45%,rgba(255,190,110,0) 100%);
+  transition:width .55s var(--spring);
+}
+.seg-opt{
+  position:relative;flex:1 1 0;min-width:0;display:grid;place-items:center;
+  padding:0 4px;color:var(--ink3);font-weight:600;font-size:.88rem;white-space:nowrap;overflow:hidden;
+  transition:flex-grow .55s var(--spring),padding .55s var(--spring),color .3s;
+}
+.seg-opt span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;text-align:center}
+.seg-opt.on{flex-grow:1.6;padding-left:calc(var(--k) + 8px);color:#a84400;font-weight:700}
+.seg-opt.caps span{letter-spacing:.1em;margin-right:-.1em}
+.seg-opt:not(:first-of-type)::before{
+  content:"";position:absolute;left:0;top:30%;bottom:30%;width:1px;background:rgba(40,40,80,.16);transition:opacity .3s;
+}
+.seg-opt.on::before{opacity:0}
+.seg-knob{
+  position:absolute;top:calc((100% - var(--k)) / 2);left:var(--pad);width:var(--k);height:var(--k);border-radius:50%;
+  display:grid;place-items:center;color:#c25200;touch-action:none;cursor:grab;z-index:2;
+  background:radial-gradient(circle at 35% 28%,#fff 0%,#ffe7cc 45%,#ffd2a3 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),inset 2px 3px 5px -2px #fff,inset -2px -3px 6px -2px rgba(255,170,90,.55),
+    0 0 18px rgba(255,140,40,.55),0 8px 16px -4px rgba(238,106,0,.45);
+  transition:left .55s var(--spring),transform .25s ease,box-shadow .25s ease;
+}
+.seg-knob .ic{width:22px;height:22px;stroke-width:2.8}
+.seg.drag .seg-knob{transition:transform .2s ease,box-shadow .2s ease;transform:scale(1.1);cursor:grabbing;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),inset 2px 3px 5px -2px #fff,inset -2px -3px 6px -2px rgba(255,170,90,.55),
+    0 0 26px rgba(255,140,40,.75),0 12px 22px -4px rgba(238,106,0,.5)}
+.seg.drag .seg-fill{transition:none}
+.seg.noanim .seg-knob,.seg.noanim .seg-fill,.seg.noanim .seg-opt{transition:none!important}
+.seg-opt:focus-visible{outline-offset:-4px;border-radius:999px}
+
+/* ---------- drag & drop tags ---------- */
+.tag{touch-action:none;cursor:grab;-webkit-touch-callout:none;-webkit-user-drag:none}
+.tag.dragging{opacity:.35}
+.tag.ghost{position:fixed;z-index:60;margin:0;pointer-events:none;transform:translate(-50%,-130%) scale(1.1);
+  color:var(--orange-ink);box-shadow:0 14px 28px -6px rgba(238,106,0,.45),inset 0 0 0 1px rgba(255,190,110,.9);transition:none}
+#tpl.drop-on{outline:2px dashed var(--orange);outline-offset:2px}
+.drop-caret{position:fixed;z-index:55;width:3px;border-radius:2px;background:var(--orange);pointer-events:none;
+  box-shadow:0 0 8px rgba(240,122,0,.7);display:none}
+
+/* ---------- audit fixes ---------- */
+.stat{display:flex;flex-direction:column;min-width:0}
+.stat p{white-space:nowrap;font-size:.9rem}
+.stat .bar{margin-top:auto}
+.stat small{white-space:nowrap}
+#view-message .card h2{white-space:nowrap;font-size:1.1rem}
+#tpl{min-height:230px}
+@media (max-width:380px){
+  .stat p{font-size:.84rem}
+  .seg-opt{font-size:.82rem}
+}
+@media (max-width:340px){
+  #view-message .card h2{white-space:normal;font-size:1rem}
+  .stat{padding:8px}
+  .stat p{font-size:.74rem}
+  .stat small{font-size:.72rem}
+}
+
+/* ---------- Share button: clear liquid glass ---------- */
+.btn#shareBtn{
+  color:#8a3a00;text-shadow:0 1px 0 rgba(255,255,255,.55);
+  background:
+    radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,calc(var(--glow) * .95)) 0%,rgba(255,255,255,0) 62%),
+    linear-gradient(160deg,rgba(255,186,90,.78) 0%,rgba(255,146,36,.5) 52%,rgba(255,122,16,.62) 100%);
+  -webkit-backdrop-filter:blur(4px) saturate(2) brightness(1.06);
+  backdrop-filter:blur(4px) saturate(2) brightness(1.06);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,214,160,.8),
+    inset 3px 4px 6px -3px rgba(255,255,255,1),
+    inset -3px -4px 8px -4px rgba(255,255,255,.8),
+    inset -1px -2px 2px rgba(190,90,10,.22),
+    inset 0 0 26px rgba(255,200,120,.4),
+    0 16px 30px -10px rgba(238,106,0,.5),
+    0 2px 6px rgba(150,60,0,.14);
+  overflow:hidden;
+}
+.btn#shareBtn .ic{stroke-width:2.2;filter:drop-shadow(0 1px 0 rgba(255,255,255,.55))}
+/* glossy sheen across the top, softly faded (no hard edge) */
+.btn#shareBtn::after{
+  display:block;content:"";position:absolute;left:0;right:0;top:0;height:55%;z-index:-1;pointer-events:none;
+  border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,.14) 55%,rgba(255,255,255,0) 100%);
+}
+.btn#shareBtn:active{
+  transform:scale(1.035);--glow:1;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,230,195,1),
+    inset 3px 4px 7px -3px #fff,inset -3px -4px 9px -4px rgba(255,255,255,.95),
+    inset 0 0 30px rgba(255,210,130,.65),
+    0 20px 34px -10px rgba(238,106,0,.62),0 2px 6px rgba(150,60,0,.16);
+}
+.lens .btn#shareBtn{
+  -webkit-backdrop-filter:url(#lg-lens) blur(3px) saturate(2) brightness(1.06);
+  backdrop-filter:url(#lg-lens) blur(3px) saturate(2) brightness(1.06);
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .btn#shareBtn{background:linear-gradient(160deg,#ffc46e,#ff9a2e)}
+}
+
+/* ---------- gentle floating motion ---------- */
+@media (prefers-reduced-motion:no-preference){
+  @keyframes floatA{0%,100%{translate:0 0}50%{translate:0 -3px}}
+  @keyframes floatB{0%,100%{translate:0 0}50%{translate:0 -2px}}
+  @keyframes floatC{0%,100%{translate:0 0}33%{translate:1px -3px}66%{translate:-1px -1.5px}}
+
+  .circle,.mini,.chip,.pill,.tag,.btn,.day,.dock{
+    animation:floatA var(--fdur,5.2s) ease-in-out var(--fdel,0s) infinite;
+  }
+  :is(.circle,.mini,.chip,.pill,.tag,.btn,.day):nth-child(2n){--fdur:6.1s;--fdel:-1.7s;animation-name:floatC}
+  :is(.circle,.mini,.chip,.pill,.tag,.btn,.day):nth-child(3n){--fdur:4.6s;--fdel:-3.1s}
+  :is(.circle,.mini,.chip,.pill,.tag,.btn,.day):nth-child(5n){--fdur:5.6s;--fdel:-.9s}
+  .dock{--fdur:6.4s;--fdel:-2s;animation-name:floatB}
+  #shareTop{--fdel:-2.4s}
+
+  /* cards: keep their reveal animation, add a very slow, tiny float */
+  .card{animation:floatB 7.5s ease-in-out -1s infinite}
+  .card.rv.in{
+    animation:rvIn .6s cubic-bezier(.2,.8,.2,1) var(--d,0ms) backwards,
+              floatB 7.5s ease-in-out -1s infinite;
+  }
+  .card:nth-child(2n){animation-duration:8.5s}
+
+  /* never float while dragging a tag */
+  .tag.dragging,.tag.ghost{animation:none}
+}
+
+/* ---------- floating: remaining components ---------- */
+@media (prefers-reduced-motion:no-preference){
+  @keyframes floatD{0%,100%{translate:0 0}50%{translate:0 -1.5px}}
+
+  .stat,.ring,.seg,.opt,.preview,textarea,.row,.summary .sum-big{
+    animation:floatD var(--fdur,6s) ease-in-out var(--fdel,0s) infinite;
+  }
+  :is(.stat,.ring,.seg,.opt,.preview,textarea,.row):nth-child(2n){--fdur:7s;--fdel:-2.2s;animation-name:floatB}
+  :is(.stat,.ring,.seg,.opt,.preview,textarea,.row):nth-child(3n){--fdur:5.4s;--fdel:-3.6s}
+  :is(.stat,.ring,.seg,.opt,.preview,textarea,.row):nth-child(5n){--fdur:6.6s;--fdel:-1.1s;animation-name:floatC}
+  :is(.row):nth-child(7n){--fdur:5.8s;--fdel:-4.4s}
+
+  /* student rows keep their reveal animation, then float */
+  .row.rv.in{
+    animation:rvIn .6s cubic-bezier(.2,.8,.2,1) var(--d,0ms) backwards,
+              floatD var(--fdur,6s) ease-in-out var(--fdel,0s) infinite;
+  }
+  .row.rv.in:nth-child(2n){animation-name:rvIn,floatB}
+  .row.rv.in:nth-child(5n){animation-name:rvIn,floatC}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="lg-lens" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feImage href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='100'%20height='100'%3E%3Cdefs%3E%3ClinearGradient%20id='x'%20x1='0'%20x2='1'%20y1='0'%20y2='0'%3E%3Cstop%20offset='0'%20stop-color='%23ff0000'/%3E%3Cstop%20offset='.28'%20stop-color='%23800000'/%3E%3Cstop%20offset='.72'%20stop-color='%23800000'/%3E%3Cstop%20offset='1'%20stop-color='%23000000'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='y'%20x1='0'%20x2='0'%20y1='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%2300ff00'/%3E%3Cstop%20offset='.28'%20stop-color='%23008000'/%3E%3Cstop%20offset='.72'%20stop-color='%23008000'/%3E%3Cstop%20offset='1'%20stop-color='%23000000'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='100'%20height='100'%20fill='%23000'/%3E%3Crect%20width='100'%20height='100'%20fill='url(%23x)'/%3E%3Crect%20width='100'%20height='100'%20fill='url(%23y)'%20style='mix-blend-mode:screen'/%3E%3C/svg%3E" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map"/>
+    <feDisplacementMap in="SourceGraphic" in2="map" scale="26" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+<div class="bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><i class="b5"></i><i class="b6"></i></div>
+
+<main class="app">
+  <header class="head">
+    <label class="circle" title="Pick a date">
+      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      <input id="date" type="date" aria-label="Pick a date">
+    </label>
+    <h1 id="title">Attendance</h1>
+    <button class="circle" id="shareTop" type="button" aria-label="Share to WhatsApp">
+      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>
+      <span class="badge" id="badge" hidden>0</span>
+    </button>
+  </header>
+
+  <!-- ================= MARK ================= -->
+  <section id="view-mark" role="tabpanel" aria-label="Mark attendance">
+    <div class="daterow">
+      <h2 id="dateTitle"></h2>
+      <div class="arrows">
+        <button class="mini" id="prevDay" type="button" aria-label="Previous day"><svg class="ic sm" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button class="mini" id="nextDay" type="button" aria-label="Next day"><svg class="ic sm" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+    <div class="week" id="week"></div>
+
+    <div class="chips" id="filters" role="group" aria-label="Show students"></div>
+
+    <section class="card summary" aria-label="Summary">
+      <div class="sum-top">
+        <div>
+          <p class="muted">Present</p>
+          <div class="sum-big"><b id="cP">0</b><span id="cTotal">/ 0 students</span></div>
+        </div>
+        <div class="ring">
+          <svg viewBox="0 0 104 104" aria-hidden="true">
+            <defs><linearGradient id="og" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb23d"/><stop offset="1" stop-color="#ee6a00"/></linearGradient></defs>
+            <circle class="track" cx="52" cy="52" r="44"/>
+            <circle class="val" id="ringVal" cx="52" cy="52" r="44" stroke-dasharray="276.46" stroke-dashoffset="276.46"/>
+          </svg>
+          <b id="pct">0%</b>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><p>Present</p><small id="sP">0 / 0</small><div class="bar"><i id="bP" style="background:#ffb23d;width:0"></i></div></div>
+        <div class="stat"><p>Absent</p><small id="sA">0 / 0</small><div class="bar"><i id="bA" style="background:#ee6a00;width:0"></i></div></div>
+        <div class="stat"><p>On-duty</p><small id="sO">0 / 0</small><div class="bar"><i id="bO" style="background:#f5b800;width:0"></i></div></div>
+      </div>
+    </section>
+
+    <div class="sec">
+      <h2>Students <small id="listCount"></small></h2>
+      <button class="pill warn" id="resetDay" type="button">
+        <svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span id="resetLabel">Reset day</span>
+      </button>
+    </div>
+    <p class="small" style="margin:-4px 0 12px">Tap a name: once for absent, twice for on-duty, three times for present.</p>
+    <div class="list" id="list"></div>
+  </section>
+
+  <!-- ================= MESSAGE ================= -->
+  <section id="view-message" role="tabpanel" aria-label="Message" hidden>
+    <div class="card stack">
+      <div class="sec" style="margin:0">
+        <h2>WhatsApp message</h2>
+        <button class="pill" id="copyBtn" type="button">
+          <svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy
+        </button>
+      </div>
+      <textarea id="msg" aria-label="Attendance message" rows="9"></textarea>
+      <p class="small">You can edit this message before sharing. It refreshes when you change a mark.</p>
+      <button class="btn" id="shareBtn" type="button">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>Share to WhatsApp
+      </button>
+    </div>
+  </section>
+
+  <!-- ================= TEMPLATE ================= -->
+  <section id="view-template" role="tabpanel" aria-label="Template" hidden>
+    <div class="stack">
+      <div class="card stack">
+        <h2 style="font-size:1.2rem;font-weight:600">Message template</h2>
+        <p class="muted">Write the message once. Tap a tag to insert it, or drag it into the message where you want it.</p>
+        <div class="tags" id="tags"></div>
+        <textarea id="tpl" aria-label="Message template"></textarea>
+        <div><button class="pill warn" id="tplReset" type="button">Reset to default</button></div>
+        <p class="small">If nobody is absent or on-duty, the line with that tag is skipped automatically.</p>
+      </div>
+
+      <div class="card stack">
+        <h2 style="font-size:1.2rem;font-weight:600">How names appear</h2>
+        <div class="seg" id="seg" role="radiogroup" aria-label="How names appear">
+          <div class="seg-clip" aria-hidden="true"><div class="seg-fill" id="segFill"></div></div>
+          <button type="button" class="seg-opt on" role="radio" aria-checked="true" data-fmt="roll_name"><span>1. Arun</span></button>
+          <button type="button" class="seg-opt" role="radio" aria-checked="false" data-fmt="name"><span>Arun</span></button>
+          <button type="button" class="seg-opt caps" role="radio" aria-checked="false" data-fmt="upper"><span>ARUN</span></button>
+          <div class="seg-knob" id="segKnob" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+        </div>
+        <p class="small" style="text-align:center;margin-top:-2px">Slide to choose name style</p>
+      </div>
+
+      <div class="card stack">
+        <h2 style="font-size:1.2rem;font-weight:600">Preview</h2>
+        <div class="preview" id="preview"></div>
+        <p class="small">The preview uses the marks for the selected date.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="dock" role="tablist" aria-label="Sections">
+  <button type="button" role="tab" data-tab="mark" aria-selected="true" aria-label="Mark attendance" title="Mark">
+    <svg class="ic" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg><span>Mark</span>
+  </button>
+  <button type="button" role="tab" data-tab="message" aria-selected="false" aria-label="Message" title="Message">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Message</span>
+  </button>
+  <button type="button" role="tab" data-tab="template" aria-selected="false" aria-label="Template" title="Template">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span>Template</span>
+  </button>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const KEY = 'attendance-glass-v1';
+  const DEFAULT_TPL =
+    '📋 Attendance – {date}\n' +
+    'Total: {total} | Present: {present}\n' +
+    '❌ Absent ({absent_count}): {absent_list}\n' +
+    '🎖️ On-duty ({od_count}): {od_list}';
+  const TAGS = ['{date}','{total}','{present}','{absent_count}','{absent_list}','{od_count}','{od_list}'];
+  const NAMES = [
+    "ABINAYA A","ABINAYA R","ADRIEL JOAN A","ANUSHKA K","ATHIBA SHREEN RIYAZUDEEN","BARIVENDHAN B",
+    "BASKAR S E","DASAMALIKA S","DHARANEESH K S","DHEASYA S","EALLEN A","GANASHRI V K","GURUSARAN K",
+    "HARIHARA SETHUPATHI S A","ITHANYA K","JANANI M","KARTHIKA E","KAVIYAA N S","KAVYA T","KEERTHANA B",
+    "KISHOR M","KRISHNA PRAKASH V","LAVANYA T","MADHU SUDANAN B M","MADHUPRAVEEN K","MAYAVISHNU M",
+    "MITHRA M","MITHUN S","MUGILAN G","NANDHINI D","NETHRA K","NISHA P","NIVEDHA M","PAVITHRA SHREE S",
+    "PRADEEP A","PRANEETH R","PRETIKSH V N","PRIYASHANTHINI G","RAGUL Y","RAMYA T","RATHISH R",
+    "RICHARD FELIX J","RITHISH N","RK SANJAY","SANJAI RAMASWAMY R","SANJAY R","SARANYA S",
+    "SARAVANAKUMAR S","SARMATHA S","SATHYAPRIYA S","SELVAKUMAR V","SHREE M","SIBINANDHAN S",
+    "SUDHARSHAN J","SUREKA K","SWATHI G","TANIYA K B","THAMARAINAYAGI SURESHKUMAR","THANESH V",
+    "THANIESHA S","VINITHA B","VISHVAA L","VIVEK R","VIVITHA K","Y NANDHANA","YUVEDHASRI C"
+  ];
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  const CIRC = 276.46;
+
+  const ICON = {
+    P: '<svg class="ic" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>',
+    A: '<svg class="ic" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 8 5 5M22 8l-5 5"/></svg>',
+    O: '<svg class="ic" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+    check: '<svg class="ic sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>'
+  };
+  const LABEL = {P:'Present', A:'Absent', O:'On-duty'};
+  const STUDENTS = NAMES.map((n,i) => ({id:'s'+(i+1), roll:pad(i+1), name:n}));
+
+  /* ---------- state ---------- */
+  let S = load();
+  let date = todayStr();
+  let filter = 'all';
+  let manual = false;
+  let pinned = new Set();
+
+  function load(){
+    let d = {};
+    try { d = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){}
+    const tpl = typeof d.template === 'string'
+      ? d.template.split('\n').filter(l => !l.includes('{class}')).join('\n')
+      : '';
+    return {
+      students: STUDENTS,
+      template: tpl || DEFAULT_TPL,
+      nameFormat: ['roll_name','name','upper'].includes(d.nameFormat) ? d.nameFormat : 'roll_name',
+      marks: d.marks && typeof d.marks === 'object' ? d.marks : {}
+    };
+  }
+  function save(){
+    const keys = Object.keys(S.marks).sort();
+    while (keys.length > 60) delete S.marks[keys.shift()];
+    try { localStorage.setItem(KEY, JSON.stringify({template:S.template, nameFormat:S.nameFormat, marks:S.marks})); } catch(e){}
+  }
+
+  /* ---------- helpers ---------- */
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function iso(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function todayStr(){ return iso(new Date()); }
+  function parse(s){ return new Date(s + 'T00:00:00'); }
+  function shortDate(s){
+    const d = parse(s);
+    return isNaN(d) ? s : d.getDate() + ' ' + MONTHS[d.getMonth()].slice(0,3) + ' ' + d.getFullYear();
+  }
+  function longDate(s){
+    const d = parse(s);
+    return isNaN(d) ? s : d.getDate() + ' ' + MONTHS[d.getMonth()] + ', ' + d.getFullYear();
+  }
+  function esc(t){ return String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function dm(){ if (!S.marks[date]) S.marks[date] = {}; return S.marks[date]; }
+  function sorted(){
+    return S.students.slice().sort((a,b) => String(a.roll).localeCompare(String(b.roll), undefined, {numeric:true}));
+  }
+  function counts(){
+    const m = S.marks[date] || {};
+    let a = 0, o = 0;
+    S.students.forEach(s => { if (m[s.id] === 'A') a++; else if (m[s.id] === 'O') o++; });
+    return {a, o, p: S.students.length - a - o, total: S.students.length};
+  }
+
+  /* ---------- message ---------- */
+  function build(tpl, students, marks){
+    const absent = [], od = [];
+    students.forEach(s => {
+      if (marks[s.id] === 'A') absent.push(s);
+      else if (marks[s.id] === 'O') od.push(s);
+    });
+    const titleCase = n => n.toLowerCase().replace(/(^|\s)(\S)/g, (m, a, b) => a + b.toUpperCase());
+    const fmt = (s, i) => S.nameFormat === 'roll_name' ? ((i + 1) + '. ' + titleCase(s.name)) : S.nameFormat === 'upper' ? s.name.toUpperCase() : titleCase(s.name);
+    const vals = {
+      '{date}': shortDate(date),
+      '{total}': students.length,
+      '{present}': students.length - absent.length - od.length,
+      '{absent_count}': absent.length,
+      '{absent_list}': '\n' + absent.map((x, i) => fmt(x, i)).join('\n'),
+      '{od_count}': od.length,
+      '{od_list}': '\n' + od.map((x, i) => fmt(x, i)).join('\n')
+    };
+    return tpl.split('\n').filter(line => {
+      if (!absent.length && (line.includes('{absent_list}') || line.includes('{absent_count}'))) return false;
+      if (!od.length && (line.includes('{od_list}') || line.includes('{od_count}'))) return false;
+      return true;
+    }).map(line => {
+      let out = line;
+      TAGS.forEach(t => { out = out.split(t).join(vals[t]); });
+      return out;
+    }).join('\n').replace(/[ \t]+\n/g,'\n');
+  }
+
+  /* ---------- render ---------- */
+  function renderHead(){
+    const c = counts(), ex = c.a + c.o;
+    $('#badge').hidden = ex === 0;
+    const bd = $('#badge'); if (bd.textContent !== String(ex)){ bd.textContent = ex; bump(bd); }
+    $('#date').value = date;
+    $('#dateTitle').textContent = longDate(date);
+  }
+  function renderWeek(){
+    const d = parse(date);
+    const start = new Date(d); start.setDate(d.getDate() - d.getDay());
+    let html = '';
+    for (let i = 0; i < 7; i++){
+      const x = new Date(start); x.setDate(start.getDate() + i);
+      const k = iso(x), has = Object.keys(S.marks[k] || {}).length > 0;
+      html += '<button type="button" class="day' + (has ? ' has' : '') + '" data-d="' + k + '" aria-pressed="' + (k === date) +
+        '" aria-label="' + esc(longDate(k)) + '"><span>' + DAYS[x.getDay()] + '</span><b>' + x.getDate() + '</b><em></em></button>';
+    }
+    $('#week').innerHTML = html;
+  }
+  function renderFilters(){
+    const c = counts();
+    const items = [['all','All',c.total],['P','Present',c.p],['A','Absent',c.a],['O','On-duty',c.o]];
+    $('#filters').innerHTML = items.map(([k,l,n]) =>
+      '<button type="button" class="chip" data-f="' + k + '" aria-pressed="' + (filter === k) + '">' + l +
+      ' <small>' + n + '</small>' + (filter === k ? ICON.check : '') + '</button>').join('');
+  }
+  function renderSummary(){
+    const c = counts();
+    const pct = c.total ? Math.round(c.p / c.total * 100) : 0;
+    tween($('#cP'), c.p);
+    $('#cTotal').textContent = '/ ' + c.total + ' students';
+    tween($('#pct'), pct, '%');
+    $('#ringVal').setAttribute('stroke-dashoffset', (CIRC * (1 - pct / 100)).toFixed(2));
+    [['P',c.p],['A',c.a],['O',c.o]].forEach(([k,n]) => {
+      $('#s' + k).textContent = n + ' / ' + c.total;
+      $('#b' + k).style.width = (c.total ? n / c.total * 100 : 0) + '%';
+    });
+  }
+  function renderList(){
+    const fresh = MOTION && (date + '|' + filter) !== lastKey; lastKey = date + '|' + filter;
+    const m = S.marks[date] || {};
+    const all = sorted();
+    const list = all.filter(s => filter === 'all' || pinned.has(s.id) || (filter === 'P' ? !m[s.id] : m[s.id] === filter));
+    $('#listCount').textContent = list.length === all.length ? '' : '(' + list.length + ' of ' + all.length + ')';
+    if (!list.length){
+      const msg = {P:'Nobody is present. Everyone is marked absent or on-duty.', A:'Nobody is marked absent.', O:'Nobody is marked on-duty.'}[filter] || 'No students.';
+      $('#list').innerHTML = '<div class="card none"><p class="muted">' + msg + '</p></div>';
+      return;
+    }
+    $('#list').innerHTML = list.map(s => {
+      const st = m[s.id] || 'P';
+      return '<button type="button" class="row' + (fresh ? ' rv' : '') + '" data-id="' + esc(s.id) + '" data-s="' + st + '" aria-label="' +
+        esc(s.roll + ' ' + s.name + ', ' + LABEL[st]) + '">' +
+        '<span class="rn">' + esc(s.roll) + '</span>' +
+        '<span class="rt"><b>' + esc(s.name) + '</b><i>' + LABEL[st] + '</i></span>' +
+        '<span class="ri">' + ICON[st] + '</span></button>';
+    }).join('');
+    if (fresh) watchRows();
+  }
+  function renderMessage(){
+    if (!manual) $('#msg').value = build(S.template, S.students, S.marks[date] || {});
+  }
+  function renderTemplate(){
+    if (document.activeElement !== $('#tpl')) $('#tpl').value = S.template;
+    renderSeg();
+    $('#preview').textContent = build($('#tpl').value || S.template, S.students, S.marks[date] || {});
+  }
+  function renderAll(){
+    disarmReset();
+    renderHead(); renderWeek(); renderFilters(); renderSummary(); renderList(); renderMessage(); renderTemplate();
+  }
+  function changed(){ manual = false; save(); renderAll(); }
+
+  /* ---------- toast ---------- */
+  let tt;
+  function toast(t){
+    const el = $('#toast'); el.textContent = t; el.classList.add('show');
+    clearTimeout(tt); tt = setTimeout(() => el.classList.remove('show'), 2200);
+  }
+
+  /* ---------- tabs ---------- */
+  const TITLES = {mark:'Attendance', message:'Message', template:'Template'};
+  function swapViews(name){
+    ['mark','message','template'].forEach(n => {
+      const el = $('#view-' + n);
+      el.classList.remove('pg-r','pg-l','po-l','po-r');
+      el.hidden = n !== name;
+    });
+    $('#title').textContent = TITLES[name];
+    if (name === 'template') renderTemplate();
+    window.scrollTo({top:0, behavior:'instant'});
+    replayReveal($('#view-' + name));
+  }
+  function finishXf(){
+    ORDER.forEach(n => {
+      const el = $('#view-' + n);
+      if (el.classList.contains('xf-out')){ el.hidden = true; el.removeAttribute('style'); el.classList.remove('xf-out'); }
+      el.classList.remove('xf-in','xf-fwd','xf-back');
+    });
+  }
+  function swapTitle(name){
+    const t = $('#title'); t.textContent = TITLES[name];
+    if (MOTION){ t.classList.remove('swap'); void t.offsetWidth; t.classList.add('swap'); }
+  }
+  function showTab(name, src){
+    const prevTab = curTab, seq = ++tabSeq;
+    curTab = name;
+    $$('.dock button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+    if (name === prevTab){ window.scrollTo({top:0, behavior: FULL ? 'smooth' : 'auto'}); return; }
+    if (!MOTION){ swapViews(name); return; }
+
+    clearTimeout(xfTimer); finishXf();
+    const fwd = ORDER.indexOf(name) > ORDER.indexOf(prevTab);
+    const inEl = $('#view-' + name);
+    const outEl = ORDER.map(n => $('#view-' + n)).find(el => !el.hidden && el !== inEl);
+    const sb = src ? src.getBoundingClientRect() : {left:window.innerWidth / 2, top:window.innerHeight - 40, width:0, height:0};
+    const cx = sb.left + sb.width / 2, cy = sb.top + sb.height / 2;
+
+    if (outEl){                                   // freeze the old page where it is, then fade/zoom it away
+      const r = outEl.getBoundingClientRect();
+      outEl.style.cssText = 'position:fixed;margin:0;z-index:5;pointer-events:none;top:' + r.top + 'px;left:' + r.left + 'px;width:' + r.width + 'px;';
+      outEl.style.setProperty('--ox', (cx - r.left) + 'px'); outEl.style.setProperty('--oy', (cy - r.top) + 'px');
+      outEl.classList.add('xf-out', fwd ? 'xf-fwd' : 'xf-back');
+    }
+    inEl.hidden = false;                          // bring in the new page, zooming out of the tapped tab
+    swapTitle(name);
+    if (name === 'template') renderTemplate();
+    window.scrollTo({top:0, behavior:'instant'});
+    const r2 = inEl.getBoundingClientRect();
+    inEl.style.setProperty('--ox', (cx - r2.left) + 'px'); inEl.style.setProperty('--oy', (cy - r2.top) + 'px');
+    inEl.classList.remove('xf-in','xf-fwd','xf-back'); void inEl.offsetWidth;
+    inEl.classList.add('xf-in', fwd ? 'xf-fwd' : 'xf-back');
+    replayReveal(inEl);
+    xfTimer = setTimeout(finishXf, 650);
+  }
+  $$('.dock button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab, b)));
+
+  /* ---------- date ---------- */
+  $('#date').addEventListener('change', e => { if (e.target.value){ date = e.target.value; manual = false; pinned.clear(); renderAll(); } });
+  $('#date').addEventListener('click', e => { try { e.target.showPicker(); } catch(_){} });
+  function shiftDay(n){ const d = parse(date); d.setDate(d.getDate() + n); date = iso(d); manual = false; pinned.clear(); renderAll(); }
+  $('#prevDay').addEventListener('click', () => shiftDay(-1));
+  $('#nextDay').addEventListener('click', () => shiftDay(1));
+  $('#week').addEventListener('click', e => {
+    const b = e.target.closest('.day'); if (!b) return;
+    date = b.dataset.d; manual = false; pinned.clear(); renderAll();
+    const nd = $('#week .day[data-d="' + date + '"]'); if (nd) nd.focus({preventScroll:true});
+  });
+
+  /* ---------- filters + marking ---------- */
+  $('#filters').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    filter = b.dataset.f; pinned.clear(); renderFilters(); renderList();
+    const nc = $('#filters .chip[data-f="' + filter + '"]'); if (nc){ nc.focus({preventScroll:true}); nc.scrollIntoView({behavior: FULL ? 'smooth' : 'auto', inline:'center', block:'nearest'}); }
+  });
+  $('#list').addEventListener('click', e => {
+    const r = e.target.closest('.row'); if (!r) return;
+    const m = dm(), id = r.dataset.id, cur = m[id];
+    if (!cur) m[id] = 'A'; else if (cur === 'A') m[id] = 'O'; else delete m[id];
+    pinned.add(id);
+    changed();
+    const nr = $('#list .row[data-id="' + id + '"]'); if (nr){ nr.focus({preventScroll:true}); if (MOTION) nr.classList.add('pop'); }
+  });
+  let resetArmed = false, resetTimer;
+  function disarmReset(){ resetArmed = false; clearTimeout(resetTimer); $('#resetLabel').textContent = 'Reset day'; }
+  $('#resetDay').addEventListener('click', () => {
+    if (!Object.keys(S.marks[date] || {}).length){ toast('Everyone is already present'); return; }
+    if (!resetArmed){
+      resetArmed = true;
+      $('#resetLabel').textContent = 'Tap again to confirm';
+      resetTimer = setTimeout(disarmReset, 3000);
+      return;
+    }
+    disarmReset();
+    delete S.marks[date];
+    pinned.clear();
+    changed();
+    toast('Day reset. Everyone is present');
+  });
+
+  /* ---------- message actions ---------- */
+  $('#msg').addEventListener('input', () => { manual = true; });
+  $('#copyBtn').addEventListener('click', async () => {
+    const t = $('#msg').value;
+    try { await navigator.clipboard.writeText(t); }
+    catch(e){ $('#msg').select(); document.execCommand('copy'); }
+    toast('Message copied');
+  });
+  function share(){
+    const t = $('#msg').value.trim();
+    if (!t){ toast('Nothing to share yet'); return; }
+    const url = 'https://wa.me/?text=' + encodeURIComponent(t);
+    if (!window.open(url, '_blank')) window.location.href = url;
+  }
+  $('#shareBtn').addEventListener('click', share);
+  $('#shareTop').addEventListener('click', share);
+
+  /* ---------- template ---------- */
+  $('#tags').innerHTML = TAGS.map(t => '<button type="button" class="tag" data-tag="' + t + '">' + t + '</button>').join('');
+  let justDragged = false;
+  $('#tags').addEventListener('click', e => {
+    const c = e.target.closest('.tag'); if (!c) return;
+    if (justDragged) { justDragged = false; return; }
+    const ta = $('#tpl');
+    ta.setRangeText(c.dataset.tag, ta.selectionStart, ta.selectionEnd, 'end');
+    ta.focus();
+    ta.dispatchEvent(new Event('input'));
+  });
+
+  /* drag a tag into the template (touch + mouse) */
+  (function(){
+    const ta = $('#tpl');
+    const caret = document.createElement('div'); caret.className = 'drop-caret'; document.body.appendChild(caret);
+    let tag = null, ghost = null, sx = 0, sy = 0, active = false, dropIdx = -1;
+
+    function caretFromPoint(x, y){
+      const r = ta.getBoundingClientRect(), cs = getComputedStyle(ta);
+      const m = document.createElement('div');
+      ['fontFamily','fontSize','fontWeight','fontStyle','letterSpacing','lineHeight','wordSpacing','textTransform','tabSize',
+       'paddingTop','paddingRight','paddingBottom','paddingLeft','borderTopWidth','borderRightWidth','borderBottomWidth','borderLeftWidth']
+        .forEach(k => m.style[k] = cs[k]);
+      m.style.cssText += ';position:fixed;visibility:hidden;pointer-events:none;overflow:hidden;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:break-word;border-style:solid;border-color:transparent;' +
+        'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+      const spans = [], idxs = [];
+      let u = 0;
+      for (const ch of ta.value){
+        const sp = document.createElement('span'); sp.textContent = ch; m.appendChild(sp);
+        spans.push(sp); idxs.push(u); u += ch.length;
+      }
+      const end = document.createElement('span'); end.textContent = '\u200b'; m.appendChild(end);
+      spans.push(end); idxs.push(u);
+      document.body.appendChild(m);
+      m.scrollTop = ta.scrollTop;
+      let best = null, bs = Infinity;
+      spans.forEach((sp, i) => {
+        const b = sp.getBoundingClientRect();
+        const h = b.height || parseFloat(cs.lineHeight) || 24;
+        const score = Math.abs(y - (b.top + h / 2)) * 100 + Math.abs(x - b.left);
+        if (score < bs){ bs = score; best = {idx: idxs[i], left: b.left, top: b.top, h: h}; }
+      });
+      document.body.removeChild(m);
+      return best;
+    }
+
+    function update(x, y){
+      ghost.style.left = x + 'px'; ghost.style.top = y + 'px';
+      const r = ta.getBoundingClientRect();
+      const inside = x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+      ta.classList.toggle('drop-on', inside);
+      if (!inside){ caret.style.display = 'none'; dropIdx = -1; return; }
+      const c = caretFromPoint(x, y);
+      dropIdx = c.idx;
+      caret.style.display = 'block';
+      caret.style.left = (c.left - 1) + 'px'; caret.style.top = c.top + 'px'; caret.style.height = c.h + 'px';
+    }
+
+    function cleanup(){
+      if (ghost) ghost.remove();
+      if (tag) tag.classList.remove('dragging');
+      ta.classList.remove('drop-on'); caret.style.display = 'none';
+      tag = ghost = null; active = false; dropIdx = -1;
+    }
+
+    const box = $('#tags');
+    function begin(t, x, y){ tag = t; sx = x; sy = y; active = false; }
+    function move(x, y, ev){
+      if (!tag) return;
+      if (!active){
+        if (Math.hypot(x - sx, y - sy) < 6) return;
+        active = true;
+        ghost = tag.cloneNode(true); ghost.classList.add('ghost'); ghost.removeAttribute('data-tag');
+        document.body.appendChild(ghost);
+        tag.classList.add('dragging');
+      }
+      if (ev && ev.cancelable) ev.preventDefault();
+      update(x, y);
+    }
+    function finish(drop){
+      if (!tag) return;
+      if (active){
+        justDragged = true; setTimeout(() => { justDragged = false; }, 400);
+        if (drop && dropIdx >= 0){
+          ta.setRangeText(tag.dataset.tag, dropIdx, dropIdx, 'end');
+          ta.dispatchEvent(new Event('input'));
+        }
+      }
+      cleanup();
+    }
+
+    /* touch */
+    box.addEventListener('touchstart', e => {
+      const t = e.target.closest('.tag'); if (!t || e.touches.length !== 1) return;
+      begin(t, e.touches[0].clientX, e.touches[0].clientY);
+    }, {passive:true});
+    box.addEventListener('touchmove', e => {
+      if (!tag) return;
+      const t = e.touches[0]; move(t.clientX, t.clientY, e);
+    }, {passive:false});
+    box.addEventListener('touchend', e => { if (active && e.cancelable) e.preventDefault(); finish(true); });
+    box.addEventListener('touchcancel', () => finish(false));
+
+    /* mouse */
+    box.addEventListener('mousedown', e => {
+      const t = e.target.closest('.tag'); if (!t || e.button !== 0) return;
+      begin(t, e.clientX, e.clientY);
+    });
+    document.addEventListener('mousemove', e => { if (tag) move(e.clientX, e.clientY, e); });
+    document.addEventListener('mouseup', () => finish(true));
+
+    /* no native drag image / long-press menu while dragging */
+    box.addEventListener('dragstart', e => e.preventDefault());
+    box.addEventListener('contextmenu', e => { if (e.target.closest('.tag')) e.preventDefault(); });
+  })();
+  $('#tpl').addEventListener('input', e => { S.template = e.target.value; manual = false; save(); renderMessage(); renderTemplate(); });
+  $('#tplReset').addEventListener('click', () => {
+    S.template = DEFAULT_TPL; $('#tpl').value = DEFAULT_TPL; changed(); toast('Template reset');
+  });
+  /* ---------- name style slider ---------- */
+  const FMTS = ['roll_name','name','upper'];
+  const SEG_PAD = 6, SEG_K = 44;
+  let segDrag = false, segMoved = false, segPlaced = false;
+  const segU = () => ($('#seg').clientWidth - SEG_PAD * 2) / 3.6;
+  function setKnob(left){
+    $('#segKnob').style.left = left + 'px';
+    $('#segFill').style.width = (left + SEG_K + 84) + 'px';
+  }
+  function renderSeg(){
+    const seg = $('#seg'), idx = FMTS.indexOf(S.nameFormat);
+    $$('.seg-opt').forEach((b, i) => {
+      b.classList.toggle('on', i === idx);
+      b.setAttribute('aria-checked', String(i === idx));
+      b.tabIndex = i === idx ? 0 : -1;
+    });
+    if (segDrag || !seg.clientWidth) return;
+    if (!segPlaced){ seg.classList.add('noanim'); setKnob(SEG_PAD + idx * segU()); void seg.offsetWidth; seg.classList.remove('noanim'); segPlaced = true; }
+    else setKnob(SEG_PAD + idx * segU());
+  }
+  function setFmt(f){ if (f !== S.nameFormat){ S.nameFormat = f; changed(); } }
+  $$('.seg-opt').forEach(b => b.addEventListener('click', () => { if (!segMoved) setFmt(b.dataset.fmt); }));
+  $('#seg').addEventListener('keydown', e => {
+    const d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+    if (!d) return;
+    e.preventDefault();
+    const i = Math.max(0, Math.min(2, FMTS.indexOf(S.nameFormat) + d));
+    setFmt(FMTS[i]);
+    $$('.seg-opt')[i].focus({preventScroll:true});
+  });
+  (function(){
+    const seg = $('#seg'), knob = $('#segKnob');
+    let sx = 0, sl = 0, pid = null;
+    knob.addEventListener('pointerdown', e => {
+      segDrag = true; segMoved = false; pid = e.pointerId;
+      try { knob.setPointerCapture(pid); } catch(_){}
+      sx = e.clientX; sl = parseFloat(knob.style.left) || SEG_PAD;
+      seg.classList.add('drag'); e.preventDefault();
+    });
+    knob.addEventListener('pointermove', e => {
+      if (!segDrag || e.pointerId !== pid) return;
+      const u = segU();
+      const left = Math.max(SEG_PAD, Math.min(SEG_PAD + 2 * u, sl + e.clientX - sx));
+      if (Math.abs(e.clientX - sx) > 3) segMoved = true;
+      setKnob(left);
+      setFmt(FMTS[Math.round((left - SEG_PAD) / u)]);
+    });
+    const end = () => {
+      if (!segDrag) return;
+      segDrag = false; seg.classList.remove('drag');
+      try { knob.releasePointerCapture(pid); } catch(_){}
+      setKnob(SEG_PAD + FMTS.indexOf(S.nameFormat) * segU());
+      setTimeout(() => { segMoved = false; }, 0);
+    };
+    knob.addEventListener('pointerup', end);
+    knob.addEventListener('pointercancel', end);
+  })();
+  window.addEventListener('resize', () => { segPlaced = false; renderSeg(); });
+
+  /* ---------- liquid glass: lens refraction (Chromium) + touch light ---------- */
+  try {
+    const b = navigator.userAgentData && navigator.userAgentData.brands;
+    if (b && b.some(x => /Chromium|Chrome/i.test(x.brand))) document.documentElement.classList.add('lens');
+  } catch(e){}
+  const GLASS = '.circle,.mini,.chip,.pill,.tag,.opt,.btn,.day,.dock button';
+  document.addEventListener('pointerdown', e => {
+    const el = e.target.closest(GLASS); if (!el) return;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+    el.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+  }, {passive:true});
+  document.addEventListener('touchstart', () => {}, {passive:true});
+
+  /* ---------- motion ---------- */
+  const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const MOTION = 'IntersectionObserver' in window;
+  const FULL = MOTION && !REDUCED;
+  const ORDER = ['mark','message','template'];
+  let curTab = 'mark';
+  let tabSeq = 0;
+  let xfTimer = 0;
+  let lastKey = '';
+
+  function makeObserver(){
+    return new IntersectionObserver(entries => {
+      let n = 0;
+      entries.forEach(en => {
+        if (!en.isIntersecting) return;
+        en.target.style.setProperty('--d', Math.min(n++, 8) * 45 + 'ms');
+        en.target.classList.add('in');
+        en.target.__io && en.target.__io.unobserve(en.target);
+      });
+    }, {threshold:0.05, rootMargin:'0px 0px -6% 0px'});
+  }
+  const ioStatic = MOTION ? makeObserver() : null;
+  const ioList = MOTION ? makeObserver() : null;
+  function watch(io, els){ els.forEach(el => { el.__io = io; io.observe(el); }); }
+  function watchRows(){ ioList.disconnect(); watch(ioList, $$('#list .row.rv')); }
+  if (MOTION){
+    const sel = ['#view-mark > :not(#list)', '#view-message .card', '#view-template > .stack > .card'];
+    sel.forEach(q => { const els = $$(q); els.forEach(el => el.classList.add('rv')); watch(ioStatic, els); });
+  }
+
+  function replayReveal(sec){
+    if (!MOTION) return;
+    const todo = [];
+    sec.querySelectorAll('.rv, #list .row').forEach(el => {
+      const r = el.getBoundingClientRect();
+      if (r.height && r.top < window.innerHeight) todo.push(el);
+    });
+    todo.forEach(el => { el.classList.add('rv'); el.classList.remove('in'); if (el.__io) el.__io.unobserve(el); });
+    void sec.offsetWidth;
+    todo.forEach((el, i) => { el.style.setProperty('--d', Math.min(i, 9) * 55 + 'ms'); el.classList.add('in'); });
+  }
+
+  function playPage(name, prev){
+    const el = $('#view-' + name);
+    const cls = ORDER.indexOf(name) > ORDER.indexOf(prev) ? 'pg-r' : 'pg-l';
+    el.classList.remove('pg-r','pg-l'); void el.offsetWidth; el.classList.add(cls);
+    const t = $('#title'); t.classList.remove('swap'); void t.offsetWidth; t.classList.add('swap');
+  }
+  $$('main > section[id^="view-"]').forEach(el => el.addEventListener('animationend', e => {
+    if (e.target === el) el.classList.remove('pg-r','pg-l');
+  }));
+
+  function tween(el, to, suf){
+    suf = suf || '';
+    const from = el._v == null ? 0 : el._v;
+    el._v = to;
+    cancelAnimationFrame(el._r);
+    if (!MOTION || from === to){ el.textContent = to + suf; return; }
+    const t0 = performance.now(), dur = 450;
+    (function step(t){
+      const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = Math.round(from + (to - from) * e) + suf;
+      if (k < 1) el._r = requestAnimationFrame(step);
+    })(t0);
+  }
+  function bump(el){
+    if (!MOTION) return;
+    el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  }
+  if (FULL){
+    const bgEl = $('.bg'); let tick = false;
+    window.addEventListener('scroll', () => {
+      if (tick) return; tick = true;
+      requestAnimationFrame(() => { bgEl.style.setProperty('--sy', window.scrollY); tick = false; });
+    }, {passive:true});
+  }
+
+  if (FULL && window.matchMedia('(hover: hover) and (pointer: fine)').matches){
+    let target = 0, cur = 0, raf = 0;
+    const maxY = () => Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    const loop = () => {
+      if (Math.abs(window.scrollY - cur) > 2){ raf = 0; return; }
+      cur += (target - cur) * 0.14;
+      if (Math.abs(target - cur) < 0.4) cur = target;
+      window.scrollTo({top:cur, behavior:'instant'});
+      raf = cur === target ? 0 : requestAnimationFrame(loop);
+    };
+    window.addEventListener('wheel', e => {
+      if (e.ctrlKey || e.metaKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      if (e.target.closest && e.target.closest('textarea')) return;
+      e.preventDefault();
+      if (!raf){ cur = target = window.scrollY; }
+      target = Math.max(0, Math.min(maxY(), target + e.deltaY * (e.deltaMode === 1 ? 32 : 1)));
+      if (!raf) raf = requestAnimationFrame(loop);
+    }, {passive:false});
+  }
+
+  /* ---------- go ---------- */
+  renderAll();
+  $('#tpl').value = S.template;
+})();
+</script>
+</body>
+</html>
