@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#e8e8eb">
+<meta name="color-scheme" content="light">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>Attendance</title>
@@ -559,26 +560,26 @@ body{overflow-x:clip}
 
 /* ---------- gentle floating motion ---------- */
 @media (prefers-reduced-motion:no-preference){
-  @keyframes floatA{0%,100%{translate:0 0}50%{translate:0 -3px}}
-  @keyframes floatB{0%,100%{translate:0 0}50%{translate:0 -2px}}
-  @keyframes floatC{0%,100%{translate:0 0}33%{translate:1px -3px}66%{translate:-1px -1.5px}}
+  @keyframes floatA{0%,100%{translate:0 0;rotate:0deg}50%{translate:0 -6px;rotate:-.5deg}}
+  @keyframes floatB{0%,100%{translate:0 0}50%{translate:0 -4px}}
+  @keyframes floatC{0%,100%{translate:0 0;rotate:0deg}33%{translate:2px -6px;rotate:.5deg}66%{translate:-2px -3px;rotate:-.4deg}}
 
   .circle,.mini,.chip,.pill,.tag,.btn,.day,.dock{
-    animation:floatA var(--fdur,5.2s) ease-in-out var(--fdel,0s) infinite;
+    animation:floatA var(--fdur,4.2s) ease-in-out var(--fdel,0s) infinite;
   }
-  :is(.circle,.mini,.chip,.pill,.tag,.btn,.day):nth-child(2n){--fdur:6.1s;--fdel:-1.7s;animation-name:floatC}
-  :is(.circle,.mini,.chip,.pill,.tag,.btn,.day):nth-child(3n){--fdur:4.6s;--fdel:-3.1s}
+  :is(.circle,.mini,.chip,.pill,.tag,.btn,.day):nth-child(2n){--fdur:5s;--fdel:-1.7s;animation-name:floatC}
+  :is(.circle,.mini,.chip,.pill,.tag,.btn,.day):nth-child(3n){--fdur:3.8s;--fdel:-3.1s}
   :is(.circle,.mini,.chip,.pill,.tag,.btn,.day):nth-child(5n){--fdur:5.6s;--fdel:-.9s}
   .dock{--fdur:6.4s;--fdel:-2s;animation-name:floatB}
   #shareTop{--fdel:-2.4s}
 
   /* cards: keep their reveal animation, add a very slow, tiny float */
-  .card{animation:floatB 7.5s ease-in-out -1s infinite}
+  .card{animation:floatB 6s ease-in-out -1s infinite}
   .card.rv.in{
     animation:rvIn .6s cubic-bezier(.2,.8,.2,1) var(--d,0ms) backwards,
-              floatB 7.5s ease-in-out -1s infinite;
+              floatB 6s ease-in-out -1s infinite;
   }
-  .card:nth-child(2n){animation-duration:8.5s}
+  .card:nth-child(2n){animation-duration:7s}
 
   /* never float while dragging a tag */
   .tag.dragging,.tag.ghost{animation:none}
@@ -586,13 +587,13 @@ body{overflow-x:clip}
 
 /* ---------- floating: remaining components ---------- */
 @media (prefers-reduced-motion:no-preference){
-  @keyframes floatD{0%,100%{translate:0 0}50%{translate:0 -1.5px}}
+  @keyframes floatD{0%,100%{translate:0 0}50%{translate:0 -3px}}
 
   .stat,.ring,.seg,.opt,.preview,textarea,.row,.summary .sum-big{
-    animation:floatD var(--fdur,6s) ease-in-out var(--fdel,0s) infinite;
+    animation:floatD var(--fdur,4.8s) ease-in-out var(--fdel,0s) infinite;
   }
-  :is(.stat,.ring,.seg,.opt,.preview,textarea,.row):nth-child(2n){--fdur:7s;--fdel:-2.2s;animation-name:floatB}
-  :is(.stat,.ring,.seg,.opt,.preview,textarea,.row):nth-child(3n){--fdur:5.4s;--fdel:-3.6s}
+  :is(.stat,.ring,.seg,.opt,.preview,textarea,.row):nth-child(2n){--fdur:5.6s;--fdel:-2.2s;animation-name:floatB}
+  :is(.stat,.ring,.seg,.opt,.preview,textarea,.row):nth-child(3n){--fdur:4.2s;--fdel:-3.6s}
   :is(.stat,.ring,.seg,.opt,.preview,textarea,.row):nth-child(5n){--fdur:6.6s;--fdel:-1.1s;animation-name:floatC}
   :is(.row):nth-child(7n){--fdur:5.8s;--fdel:-4.4s}
 
@@ -604,6 +605,214 @@ body{overflow-x:clip}
   .row.rv.in:nth-child(2n){animation-name:rvIn,floatB}
   .row.rv.in:nth-child(5n){animation-name:rvIn,floatC}
 }
+</style>
+<style id="x-additions">
+/* =====================================================================
+   ADDITIONS (new code only; everything above this block is unchanged)
+   ===================================================================== */
+
+/* 1. colour-coded rows: absent = soft red, on-duty = gold (gold already set above) */
+.row[data-s="A"]{
+  background:linear-gradient(150deg,rgba(255,92,92,.28),rgba(255,92,92,.08));
+  border-color:rgba(224,60,60,.45);
+}
+.row[data-s="A"] .rn{
+  background:linear-gradient(150deg,#ff8a8a,#e03c3c);color:#fff;
+  box-shadow:0 5px 12px rgba(224,60,60,.4);
+}
+.row[data-s="A"] .rt i{color:#a82020}
+.row[data-s="A"] .ri{color:#c93030}
+
+/* 2 + 3. search box, Today and Mark all present */
+.xtools{display:grid;gap:10px;margin:0 0 12px}
+.xsearch{position:relative}
+.xsearch > .ic{position:absolute;left:17px;top:14px;color:var(--ink3);pointer-events:none}
+.xsearch input{
+  width:100%;height:50px;padding:0 48px 0 46px;border-radius:999px;
+  font:inherit;font-size:1rem;color:var(--ink);
+  -webkit-appearance:none;appearance:none;
+  background:linear-gradient(150deg,rgba(255,255,255,.8),rgba(255,255,255,.46));
+  border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 2px 6px rgba(40,40,80,.06),0 8px 18px -8px rgba(40,40,80,.18);
+}
+.xsearch input::placeholder{color:var(--ink3)}
+.xsearch input::-webkit-search-cancel-button,
+.xsearch input::-webkit-search-decoration{-webkit-appearance:none;display:none}
+.xclear{
+  position:absolute;right:8px;top:8px;width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;color:var(--ink2);background:rgba(40,40,80,.09);
+}
+.xclear:active{transform:scale(.92)}
+.xactions{display:flex;gap:8px}
+.xactions .pill{flex:1 1 0;justify-content:center;white-space:nowrap;min-width:0}
+.xactions .pill[data-now="true"]{opacity:.6}
+.xinfo{margin:0 6px}
+
+/* 4. feedback: confetti */
+.xconf{
+  position:fixed;z-index:70;pointer-events:none;border-radius:2px;
+  will-change:transform,opacity;
+}
+
+/* 5. more room under the list so the floating dock never covers the last names */
+body{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+#list{padding-bottom:12px}
+</style>
+<!-- ADDITIONS 2 (new code only): install + offline support -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="application-name" content="Attendance">
+<meta name="apple-mobile-web-app-title" content="Attendance">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style id="x-additions-2">
+/* =====================================================================
+   ADDITIONS 2 (new code only): Undo, floating count chip, install banner
+   ===================================================================== */
+
+/* undo snackbar (sits just above the dock) */
+.xundo{
+  position:fixed;left:50%;bottom:calc(max(18px,env(safe-area-inset-bottom)) + 80px);z-index:25;
+  display:flex;align-items:center;gap:14px;width:max-content;max-width:calc(100vw - 32px);
+  padding:8px 8px 8px 18px;border-radius:999px;
+  background:rgba(30,30,36,.93);color:#fff;font-weight:600;font-size:.92rem;
+  box-shadow:0 14px 30px -8px rgba(20,20,40,.5);
+  transform:translate(-50%,18px);opacity:0;visibility:hidden;
+  transition:transform .3s cubic-bezier(.2,.9,.3,1.2),opacity .2s,visibility 0s .3s;
+}
+.xundo.show{transform:translate(-50%,0);opacity:1;visibility:visible;transition-delay:0s}
+.xundo button{
+  padding:9px 18px;border-radius:999px;font-weight:700;font-size:.9rem;color:#fff;
+  background:var(--orange-grad);box-shadow:0 4px 10px rgba(238,106,0,.4);
+}
+.xundo button:active{transform:scale(.95)}
+
+/* floating present count */
+.xchip{
+  position:fixed;left:50%;top:max(10px,env(safe-area-inset-top));z-index:20;
+  display:flex;align-items:baseline;gap:7px;padding:9px 16px 12px;border-radius:999px;overflow:hidden;
+  font-weight:600;font-size:.9rem;color:var(--ink2);white-space:nowrap;
+  background:linear-gradient(150deg,rgba(255,255,255,.92),rgba(255,255,255,.68));
+  -webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);
+  border:1px solid rgba(255,255,255,.95);
+  box-shadow:0 10px 24px -6px rgba(40,40,80,.28),inset 0 1px 0 #fff;
+  transform:translate(-50%,-90px);opacity:0;visibility:hidden;
+  transition:transform .35s cubic-bezier(.2,.9,.3,1.2),opacity .25s,visibility 0s .35s;
+}
+.xchip.show{transform:translate(-50%,0);opacity:1;visibility:visible;transition-delay:0s}
+.xchip:active{transform:translate(-50%,0) scale(.96)}
+.xchip b{font-size:1.02rem;font-weight:700;color:var(--ink)}
+.xchip small{font-size:.78rem;font-weight:600;color:var(--orange-ink)}
+.xchip i{
+  position:absolute;left:0;bottom:0;height:3px;width:0;
+  background:var(--orange-grad);transition:width .4s ease;
+}
+
+/* install banner */
+.xinstall{
+  display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:12px 10px 12px 16px;border-radius:24px;
+  background:linear-gradient(150deg,rgba(255,255,255,.78),rgba(255,255,255,.4));
+  border:1px solid rgba(255,255,255,.92);
+  box-shadow:var(--shadow),inset 0 1px 0 #fff;
+}
+.xinstall p{flex:1;min-width:0;font-weight:700;font-size:.92rem;line-height:1.3}
+.xinstall p small{display:block;margin-top:2px;font-weight:500;font-size:.8rem;color:var(--ink2)}
+.xinstall .xi-go{
+  flex:none;padding:10px 18px;border-radius:999px;font-weight:700;font-size:.9rem;color:#fff;
+  background:var(--orange-grad);box-shadow:0 6px 14px rgba(238,106,0,.35);
+}
+.xinstall .xi-x{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--ink2)}
+
+/* ---------- v2: legend, share label, calmer reset, readable helper text ---------- */
+.legend-row{display:flex;flex-wrap:wrap;gap:8px}
+.lg{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;
+  background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.95);
+  box-shadow:0 3px 8px rgba(40,40,80,.06);font-weight:600;font-size:.84rem;color:var(--ink)}
+.lg i{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.lg small{font-size:.74rem;font-weight:500;color:var(--ink2)}
+.lg-p i{background:#9a9aa5}
+.lg-a i{background:#ee6a00}
+.lg-o i{background:#f5b800}
+
+.share-cap{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:5px;
+  font-size:.68rem;font-weight:600;color:var(--ink2);white-space:nowrap;pointer-events:none}
+
+#resetDay.pill{color:var(--ink2)}
+#resetDay.pill .ic{color:var(--ink3)}
+#resetDay.armed{color:var(--orange-ink)}
+
+.small{color:#55555f}
+
+/* ---------- v3: today shortcut, chip fade, larger dock labels ---------- */
+.daterow{flex-wrap:wrap;gap:8px}
+.today-top{padding:8px 13px;font-size:.84rem;color:var(--orange-ink)}
+
+/* chips: fade the right edge when more chips are hidden off-screen */
+.chips.more-right{
+  -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent);
+  mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent);
+}
+
+
+/* ---------- v4: count bumps, saved check ---------- */
+@keyframes numBump{0%{transform:scale(1)}40%{transform:scale(1.22);color:var(--orange-ink)}100%{transform:scale(1)}}
+.num-bump{display:inline-block;animation:numBump .45s cubic-bezier(.3,1.5,.5,1)}
+
+#title{position:relative}
+.saved-tick{position:absolute;left:100%;top:50%;margin:-14px 0 0 6px;width:26px;height:26px;border-radius:50%;
+  display:grid;place-items:center;font-size:.9rem;font-weight:700;color:#fff;
+  background:var(--orange-grad);box-shadow:0 4px 10px rgba(238,106,0,.35);
+  opacity:0;pointer-events:none}
+.saved-tick.show{animation:savedPop 1.1s ease both}
+@keyframes savedPop{
+  0%{opacity:0;transform:scale(.4)}
+  15%{opacity:1;transform:scale(1.2)}
+  25%{transform:scale(1)}
+  75%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(.9)}
+}
+@media (prefers-reduced-motion:reduce){
+  .num-bump,.saved-tick.show{animation:none}
+}
+
+/* ---------- v5: feedback animations ---------- */
+
+/* 1. tap ripple on a student's number */
+.rn{position:relative}
+@keyframes rippleOut{from{transform:scale(.6);opacity:1}to{transform:scale(1.9);opacity:0}}
+.ripple{position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(238,106,0,.6);
+  pointer-events:none;animation:rippleOut .6s ease-out forwards}
+
+/* 2. "Mark all present": green wave from top to bottom */
+@keyframes waveGreen{0%{transform:scale(1)}35%{transform:scale(1.2);background:#4fb286;color:#fff}100%{transform:scale(1)}}
+.rn.wave{animation:waveGreen .55s ease both}
+
+/* 3. undo bar: a thin line shrinks to show how long Undo lasts */
+.xundo{overflow:hidden}
+.xundo-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--orange-grad);
+  transform-origin:left center;transform:scaleX(0);pointer-events:none}
+.xundo.show .xundo-bar{animation:undoShrink 7s linear forwards}
+@keyframes undoShrink{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+
+/* 4. selected day's dot grows */
+@keyframes dotGrow{from{transform:scale(0)}to{transform:scale(1)}}
+.day.has[aria-pressed="true"] em{animation:dotGrow .45s cubic-bezier(.3,1.6,.5,1) both}
+
+
+/* 6. search: matching row glows; "no match" message fades in */
+@keyframes hitGlow{0%{box-shadow:0 0 0 0 rgba(238,106,0,.5)}100%{box-shadow:0 0 0 14px rgba(238,106,0,0)}}
+.row.hit{animation:hitGlow .9s ease-out}
+@keyframes fadeInV5{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.xinfo:not([hidden]){animation:fadeInV5 .35s ease both}
+
+@media (prefers-reduced-motion:reduce){
+  .ripple,.rn.wave,.row.hit,.xundo.show .xundo-bar,
+  .day.has[aria-pressed="true"] em,.xinfo:not([hidden]){animation:none!important}
+}
+
+
+
+
 </style>
 </head>
 <body>
@@ -621,10 +830,11 @@ body{overflow-x:clip}
       <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
       <input id="date" type="date" aria-label="Pick a date">
     </label>
-    <h1 id="title">Attendance</h1>
+    <h1 id="title">Attendance<span class="saved-tick" id="savedTick" aria-hidden="true">✓</span></h1>
     <button class="circle" id="shareTop" type="button" aria-label="Share to WhatsApp">
       <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>
       <span class="badge" id="badge" hidden>0</span>
+      <span class="share-cap">WhatsApp</span>
     </button>
   </header>
 
@@ -633,6 +843,7 @@ body{overflow-x:clip}
     <div class="daterow">
       <h2 id="dateTitle"></h2>
       <div class="arrows">
+        <button class="pill today-top" id="todayTop" type="button" hidden>Today</button>
         <button class="mini" id="prevDay" type="button" aria-label="Previous day"><svg class="ic sm" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
         <button class="mini" id="nextDay" type="button" aria-label="Next day"><svg class="ic sm" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
       </div>
@@ -669,7 +880,14 @@ body{overflow-x:clip}
         <svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span id="resetLabel">Reset day</span>
       </button>
     </div>
-    <p class="small" style="margin:-4px 0 12px">Tap a name: once for absent, twice for on-duty, three times for present.</p>
+    <div class="legend" style="margin:-4px 0 12px">
+      <p class="small" style="margin:0 0 10px">Tap a name to mark it:</p>
+      <div class="legend-row">
+        <span class="lg lg-p"><i></i>Present<small>3 taps</small></span>
+        <span class="lg lg-a"><i></i>Absent<small>1 tap</small></span>
+        <span class="lg lg-o"><i></i>On-duty<small>2 taps</small></span>
+      </div>
+    </div>
     <div class="list" id="list"></div>
   </section>
 
@@ -699,7 +917,7 @@ body{overflow-x:clip}
         <div class="tags" id="tags"></div>
         <textarea id="tpl" aria-label="Message template"></textarea>
         <div><button class="pill warn" id="tplReset" type="button">Reset to default</button></div>
-        <p class="small">If nobody is absent or on-duty, the line with that tag is skipped automatically.</p>
+        <p class="small">If nobody is absent or on-duty, that line is skipped. When everyone is present, the message says \u201cAll present\u201d.</p>
       </div>
 
       <div class="card stack">
@@ -842,15 +1060,24 @@ body{overflow-x:clip}
       '{od_count}': od.length,
       '{od_list}': '\n' + od.map((x, i) => fmt(x, i)).join('\n')
     };
-    return tpl.split('\n').filter(line => {
-      if (!absent.length && (line.includes('{absent_list}') || line.includes('{absent_count}'))) return false;
-      if (!od.length && (line.includes('{od_list}') || line.includes('{od_count}'))) return false;
-      return true;
-    }).map(line => {
+    const allPresent = students.length > 0 && !absent.length && !od.length;
+    const ALL_LINE = '\u2705 All present';
+    let placed = false;
+    const lines = [];
+    tpl.split('\n').forEach(line => {
+      const isA = line.includes('{absent_list}') || line.includes('{absent_count}');
+      const isO = line.includes('{od_list}') || line.includes('{od_count}');
+      if (isA && !absent.length){
+        if (allPresent && !placed){ lines.push(ALL_LINE); placed = true; }
+        return;
+      }
+      if (isO && !od.length) return;
       let out = line;
       TAGS.forEach(t => { out = out.split(t).join(vals[t]); });
-      return out;
-    }).join('\n').replace(/[ \t]+\n/g,'\n');
+      lines.push(out);
+    });
+    if (allPresent && !placed) lines.push(ALL_LINE);
+    return lines.join('\n').replace(/[ \t]+\n/g,'\n');
   }
 
   /* ---------- render ---------- */
@@ -1018,12 +1245,12 @@ body{overflow-x:clip}
     const nr = $('#list .row[data-id="' + id + '"]'); if (nr){ nr.focus({preventScroll:true}); if (MOTION) nr.classList.add('pop'); }
   });
   let resetArmed = false, resetTimer;
-  function disarmReset(){ resetArmed = false; clearTimeout(resetTimer); $('#resetLabel').textContent = 'Reset day'; }
+  function disarmReset(){ resetArmed = false; clearTimeout(resetTimer); $('#resetLabel').textContent = 'Reset day'; $('#resetDay').classList.remove('armed'); }
   $('#resetDay').addEventListener('click', () => {
     if (!Object.keys(S.marks[date] || {}).length){ toast('Everyone is already present'); return; }
     if (!resetArmed){
       resetArmed = true;
-      $('#resetLabel').textContent = 'Tap again to confirm';
+      $('#resetLabel').textContent = 'Tap again to confirm'; $('#resetDay').classList.add('armed');
       resetTimer = setTimeout(disarmReset, 3000);
       return;
     }
@@ -1344,6 +1571,494 @@ body{overflow-x:clip}
   /* ---------- go ---------- */
   renderAll();
   $('#tpl').value = S.template;
+})();
+</script>
+<script id="x-additions-js">
+/* =====================================================================
+   ADDITIONS (new code only; the script above is unchanged)
+   Works through the page's own buttons and events, so the original
+   logic and saved data are not touched.
+   ===================================================================== */
+(function(){
+  'use strict';
+  var $ = function(s){ return document.querySelector(s); };
+  var list = $('#list'), dateInput = $('#date'), resetBtn = $('#resetDay'),
+      resetLabel = $('#resetLabel'), badge = $('#badge'), dateTitle = $('#dateTitle');
+  if (!list || !dateInput || !resetBtn || !resetLabel || !badge || !dateTitle) return;
+
+  var REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* ---------- small helpers ---------- */
+  function buzz(ms){ try { if (navigator.vibrate) navigator.vibrate(ms); } catch(e){} }
+  function iso(d){
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  var tt;
+  function say(msg){
+    var el = $('#toast'); if (!el) return;
+    el.textContent = msg; el.classList.add('show');
+    clearTimeout(tt); tt = setTimeout(function(){ el.classList.remove('show'); }, 2000);
+  }
+
+  /* ---------- build the new controls ---------- */
+  var tools = document.createElement('div');
+  tools.className = 'xtools';
+  tools.innerHTML =
+    '<div class="xsearch">' +
+      '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' +
+      '<input id="xq" type="search" placeholder="Search name or roll no." aria-label="Search students" ' +
+        'autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">' +
+      '<button type="button" class="xclear" id="xclear" aria-label="Clear search" hidden>' +
+        '<svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>' +
+      '</button>' +
+    '</div>' +
+    '<div class="xactions">' +
+      '<button type="button" class="pill" id="xToday" data-now="true">' +
+        '<svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Today' +
+      '</button>' +
+      '<button type="button" class="pill" id="xAllP">' +
+        '<svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>' +
+        '<span id="xAllLabel">Mark all present</span>' +
+      '</button>' +
+    '</div>' +
+    '<p class="small xinfo" id="xinfo" role="status" aria-live="polite" hidden></p>';
+  list.parentNode.insertBefore(tools, list);
+
+  var input = $('#xq'), clearBtn = $('#xclear'), info = $('#xinfo'),
+      todayBtn = $('#xToday'), allBtn = $('#xAllP'), allLabel = $('#xAllLabel');
+
+  /* ---------- search ---------- */
+  var q = '', qRaw = '';
+  function tokenMatch(tok, roll, name){
+    if (/^\d+$/.test(tok)) return roll === tok || String(parseInt(roll, 10)).indexOf(tok) === 0;
+    return name.indexOf(tok) !== -1;
+  }
+  function applySearch(){
+    var rows = list.querySelectorAll('.row'), shown = 0;
+    var toks = q ? q.split(/\s+/) : [];
+    rows.forEach(function(r){
+      var rn = r.querySelector('.rn'), nm = r.querySelector('.rt b');
+      var roll = rn ? rn.textContent.trim() : '', name = nm ? nm.textContent.toLowerCase() : '';
+      var ok = toks.every(function(t){ return tokenMatch(t, roll, name); });
+      r.hidden = !ok;
+      if (ok) shown++;
+    });
+    if (q && rows.length){
+      info.hidden = false;
+      info.textContent = shown
+        ? shown + ' of ' + rows.length + ' shown'
+        : 'No student matches \u201C' + qRaw + '\u201D.';
+    } else {
+      info.hidden = true; info.textContent = '';
+    }
+  }
+  input.addEventListener('input', function(){
+    qRaw = input.value.trim(); q = qRaw.toLowerCase();
+    clearBtn.hidden = !input.value;
+    applySearch();
+  });
+  input.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && input.value){ clearSearch(); }
+    else if (e.key === 'Enter'){ input.blur(); }
+  });
+  function clearSearch(){
+    input.value = ''; qRaw = q = ''; clearBtn.hidden = true; applySearch();
+  }
+  clearBtn.addEventListener('click', function(){ clearSearch(); input.focus(); });
+  /* the list is redrawn after every tap, filter or date change: re-apply the search each time */
+  new MutationObserver(applySearch).observe(list, {childList:true});
+
+  /* ---------- Today ---------- */
+  function syncToday(){ todayBtn.dataset.now = String(dateInput.value === iso(new Date())); }
+  todayBtn.addEventListener('click', function(){
+    buzz(10);
+    var t = iso(new Date());
+    if (dateInput.value === t){ say('Already on today'); return; }
+    dateInput.value = t;
+    dateInput.dispatchEvent(new Event('change', {bubbles:true}));
+  });
+
+  /* ---------- Mark all present (asks for a second tap, like Reset day) ---------- */
+  var armed = false, armTimer;
+  function disarm(){ armed = false; clearTimeout(armTimer); allLabel.textContent = 'Mark all present'; }
+  allBtn.addEventListener('click', function(){
+    buzz(10);
+    if (badge.hidden){ say('Everyone is already present'); return; }
+    if (!armed){
+      armed = true; allLabel.textContent = 'Tap again to confirm';
+      armTimer = setTimeout(disarm, 3000);
+      return;
+    }
+    disarm();
+    resetBtn.click();                                            /* arms the page's own reset... */
+    if (resetLabel.textContent !== 'Reset day') resetBtn.click(); /* ...and confirms it */
+    if (badge.hidden){
+      var r = allBtn.getBoundingClientRect();
+      burst(r.left + r.width / 2, r.top + r.height / 2);
+    }
+  });
+
+  /* when the date changes: refresh the Today button and drop any pending confirm */
+  new MutationObserver(function(){ syncToday(); disarm(); })
+    .observe(dateTitle, {childList:true, characterData:true, subtree:true});
+  syncToday();
+
+  /* ---------- feedback: vibration, confetti ---------- */
+  var COLORS = ['#ffb23d','#ee6a00','#f5b800','#8b91b8','#ffffff','#4fb286','#ff7a7a'];
+  function burst(x, y){
+    if (REDUCED) return;
+    var els = [], frag = document.createDocumentFragment(), i;
+    for (i = 0; i < 44; i++){
+      var p = document.createElement('i');
+      var w = 6 + Math.random() * 5;
+      p.className = 'xconf';
+      p.style.cssText = 'left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + (w * 1.5) + 'px;background:' + COLORS[i % COLORS.length];
+      frag.appendChild(p); els.push(p);
+    }
+    document.body.appendChild(frag);
+    els.forEach(function(p){
+      if (!p.animate){ p.remove(); return; }
+      var ang = -Math.PI / 2 + (Math.random() - .5) * Math.PI * 1.3;
+      var spd = 120 + Math.random() * 190;
+      var dx = Math.cos(ang) * spd, up = Math.sin(ang) * spd;
+      var fall = 280 + Math.random() * 240, rot = (Math.random() - .5) * 900;
+      var a = p.animate([
+        {transform:'translate(0,0) rotate(0deg)', opacity:1},
+        {transform:'translate(' + dx * .7 + 'px,' + up + 'px) rotate(' + rot * .5 + 'deg)', opacity:1, offset:.38},
+        {transform:'translate(' + dx + 'px,' + (up + fall) + 'px) rotate(' + rot + 'deg)', opacity:0}
+      ], {duration:1100 + Math.random() * 700, easing:'cubic-bezier(.25,.6,.4,1)', fill:'forwards'});
+      a.onfinish = function(){ p.remove(); };
+    });
+    setTimeout(function(){ els.forEach(function(p){ p.remove(); }); }, 2600);
+  }
+
+  var wasExceptions = false;
+  list.addEventListener('click', function(){ wasExceptions = !badge.hidden; }, true); /* runs before the page's own handler */
+  list.addEventListener('click', function(e){
+    if (!(e.target.closest && e.target.closest('.row'))) return;
+    buzz(12);
+    if (wasExceptions && badge.hidden){                         /* the last absent / on-duty mark was just cleared */
+      var x = e.clientX, y = e.clientY;
+      if (!x && !y){ x = window.innerWidth / 2; y = window.innerHeight * 0.4; }
+      burst(x, y);
+      say('Everyone is present');
+    }
+    wasExceptions = false;
+  });
+})();
+</script>
+<script id="x-additions-js-2">
+/* =====================================================================
+   ADDITIONS 2 (new code only): Undo, floating count chip, install + offline.
+   Like the first additions, this works through the page's own buttons,
+   events and saved data, so the original logic is not touched.
+   ===================================================================== */
+(function(){
+  'use strict';
+  var $ = function(s){ return document.querySelector(s); };
+  var KEY = 'attendance-glass-v1';
+  var list = $('#list'), filters = $('#filters'), dateInput = $('#date'),
+      dateTitle = $('#dateTitle'), viewMark = $('#view-mark'),
+      summary = $('.summary'), dock = $('.dock');
+  if (!list || !filters || !dateInput || !dateTitle || !viewMark || !summary || !dock) return;
+
+  function el(html){ var t = document.createElement('div'); t.innerHTML = html; return t.firstElementChild; }
+  var tt;
+  function say(msg){
+    var t = $('#toast'); if (!t) return;
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+  }
+
+  /* ---------------------------------------------------------------
+     1. UNDO for "Reset day" and "Mark all present"
+     --------------------------------------------------------------- */
+  var undoEl = el(
+    '<div class="xundo" id="xundo" role="status" aria-live="polite">' +
+      '<span id="xundoText"></span><button type="button" id="xundoBtn">Undo</button>' +
+    '</div>');
+  document.body.appendChild(undoEl);
+  var undoText = $('#xundoText'), undoBtn = $('#xundoBtn'), undoTimer, snap = null;
+
+  function readMarks(d){
+    try {
+      var o = JSON.parse(localStorage.getItem(KEY));
+      return Object.assign({}, (o && o.marks && o.marks[d]) || {});
+    } catch(e){ return {}; }
+  }
+  function hideUndo(){ clearTimeout(undoTimer); undoEl.classList.remove('show'); snap = null; }
+  function showUndo(date, marks){
+    var n = Object.keys(marks).length;
+    snap = {date: date, marks: marks};
+    undoText.textContent = 'Cleared ' + n + ' mark' + (n === 1 ? '' : 's');
+    undoEl.classList.add('show');
+    clearTimeout(undoTimer); undoTimer = setTimeout(hideUndo, 7000);
+  }
+
+  /* take a copy of the day's marks just before the page's own reset runs */
+  document.addEventListener('click', function(e){
+    if (!(e.target.closest && e.target.closest('#resetDay'))) return;
+    var d = dateInput.value, before = readMarks(d);
+    if (!Object.keys(before).length) return;
+    setTimeout(function(){
+      if (dateInput.value === d && !Object.keys(readMarks(d)).length) showUndo(d, before);
+    }, 0);
+  }, true);
+
+  /* a new tap on a name, or another date, means the old undo no longer applies */
+  list.addEventListener('click', function(e){ if (e.target.closest && e.target.closest('.row')) hideUndo(); });
+  new MutationObserver(function(){ if (snap && dateInput.value !== snap.date) hideUndo(); })
+    .observe(dateTitle, {childList:true, characterData:true, subtree:true});
+
+  /* put the saved marks back by tapping the rows, exactly as a person would */
+  var ORDER = {P:0, A:1, O:2};   /* one tap: P -> A -> O -> P */
+  function rowFor(id){ return list.querySelector('.row[data-id="' + id + '"]'); }
+  function restore(s){
+    var y = window.scrollY;
+    var prev = filters.querySelector('.chip[aria-pressed="true"]');
+    var prevF = prev ? prev.dataset.f : 'all';
+    if (prevF !== 'all'){ var all = filters.querySelector('.chip[data-f="all"]'); if (all) all.click(); }
+    var ids = Array.prototype.map.call(list.querySelectorAll('.row'), function(r){ return r.dataset.id; });
+    ids.forEach(function(id){
+      var r = rowFor(id); if (!r) return;
+      var steps = ((ORDER[s.marks[id]] || 0) - (ORDER[r.dataset.s] || 0) + 3) % 3;
+      while (steps-- > 0){ r = rowFor(id); if (!r) break; r.click(); }
+    });
+    if (prevF !== 'all'){
+      var back = filters.querySelector('.chip[data-f="' + prevF + '"]'); if (back) back.click();
+      window.scrollTo({top:y, behavior:'instant'});
+      setTimeout(function(){ window.scrollTo({top:y, behavior:'instant'}); }, 400);
+    }
+  }
+  undoBtn.addEventListener('click', function(){
+    var s = snap; hideUndo();
+    if (!s || dateInput.value !== s.date) return;
+    restore(s);
+    try { if (navigator.vibrate) navigator.vibrate(10); } catch(e){}
+    say('Marks restored');
+  });
+
+  /* ---------------------------------------------------------------
+     3. FLOATING COUNT CHIP (appears once the summary card scrolls away)
+     --------------------------------------------------------------- */
+  var chip = el(
+    '<button type="button" class="xchip" id="xchip">' +
+      '<span>Present</span><b id="xchipN">0/0</b><small id="xchipX" hidden></small><i id="xchipBar"></i>' +
+    '</button>');
+  document.body.appendChild(chip);
+  function pair(sel){
+    var n = $(sel), m = /(\d+)\s*\/\s*(\d+)/.exec(n ? n.textContent : '');
+    return m ? [+m[1], +m[2]] : [0, 0];
+  }
+  function updateChip(){
+    var p = pair('#sP'), a = pair('#sA'), o = pair('#sO'), x = [];
+    $('#xchipN').textContent = p[0] + '/' + p[1];
+    if (a[0]) x.push('A ' + a[0]);
+    if (o[0]) x.push('OD ' + o[0]);
+    var xs = $('#xchipX'); xs.textContent = x.join(' \u00B7 '); xs.hidden = !x.length;
+    $('#xchipBar').style.width = (p[1] ? p[0] / p[1] * 100 : 0) + '%';
+    chip.setAttribute('aria-label', 'Present ' + p[0] + ' of ' + p[1] + '. Tap to go to the summary.');
+  }
+  ['#sP', '#sA', '#sO'].forEach(function(s){
+    var n = $(s); if (n) new MutationObserver(updateChip).observe(n, {childList:true, characterData:true, subtree:true});
+  });
+  updateChip();
+
+  var ticking = false;
+  function updateVis(){
+    ticking = false;
+    var tab = dock.querySelector('[data-tab="mark"]');
+    var onMark = !!tab && tab.getAttribute('aria-selected') === 'true' && !viewMark.hidden;
+    var r = summary.getBoundingClientRect();
+    chip.classList.toggle('show', onMark && r.height > 0 && r.bottom < 40);
+  }
+  function queueVis(){ if (!ticking){ ticking = true; requestAnimationFrame(updateVis); } }
+  window.addEventListener('scroll', queueVis, {passive:true});
+  window.addEventListener('resize', queueVis);
+  new MutationObserver(queueVis).observe(dock, {attributes:true, attributeFilter:['aria-selected'], subtree:true});
+  new MutationObserver(queueVis).observe(viewMark, {attributes:true, attributeFilter:['hidden']});
+  chip.addEventListener('click', function(){ window.scrollTo({top:0, behavior:'smooth'}); });
+  queueVis();
+
+  /* ---------------------------------------------------------------
+     6. INSTALLABLE + OFFLINE
+     --------------------------------------------------------------- */
+  var DISMISS = 'x-install-dismissed';
+  function dismissed(){ try { return localStorage.getItem(DISMISS) === '1'; } catch(e){ return false; } }
+  function markDismissed(){ try { localStorage.setItem(DISMISS, '1'); } catch(e){} }
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var web = /^https?:$/.test(location.protocol);
+  var banner = null, deferred = null;
+
+  function hideBanner(){ if (banner){ banner.remove(); banner = null; } }
+  function showBanner(kind){
+    if (standalone || dismissed() || banner) return;
+    banner = el(
+      '<div class="xinstall" role="region" aria-label="Install app">' +
+        '<p>Install Attendance<small>' +
+          (kind === 'ios' ? 'Tap Share, then Add to Home Screen. It opens like an app and works offline.'
+                          : 'Opens like an app and works offline.') +
+        '</small></p>' +
+        (kind === 'ios' ? '' : '<button type="button" class="xi-go">Install</button>') +
+        '<button type="button" class="xi-x" aria-label="Dismiss">' +
+          '<svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>' +
+        '</button>' +
+      '</div>');
+    viewMark.insertBefore(banner, viewMark.firstChild);
+    var go = banner.querySelector('.xi-go');
+    if (go) go.addEventListener('click', function(){
+      if (!deferred) return;
+      deferred.prompt();
+      Promise.resolve(deferred.userChoice).then(function(){ deferred = null; hideBanner(); });
+    });
+    banner.querySelector('.xi-x').addEventListener('click', function(){ markDismissed(); hideBanner(); });
+  }
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferred = e; showBanner('prompt'); });
+  window.addEventListener('appinstalled', function(){ deferred = null; hideBanner(); say('App installed'); });
+  if (isIOS && web && !standalone) showBanner('ios');
+
+  /* installed apps ask the browser to keep the saved marks safe */
+  if (standalone && navigator.storage && navigator.storage.persist){
+    try { navigator.storage.persist().catch(function(){}); } catch(e){}
+  }
+
+  window.addEventListener('offline', function(){ say('You are offline. Everything still works'); });
+  window.addEventListener('online', function(){ say('Back online'); });
+
+  if ('serviceWorker' in navigator && web){
+    var register = function(){
+      navigator.serviceWorker.register('sw.js').then(function(reg){
+        reg.addEventListener('updatefound', function(){
+          var w = reg.installing; if (!w) return;
+          w.addEventListener('statechange', function(){
+            if (w.state === 'installed' && !navigator.serviceWorker.controller) say('Ready to use offline');
+          });
+        });
+      }).catch(function(){});
+    };
+    if (document.readyState === 'complete') register(); else window.addEventListener('load', register);
+  }
+})();
+</script>
+
+<script>
+(function(){
+  /* Today shortcut: mirrors the list's Today button, hidden when already on today */
+  var tt = document.getElementById('todayTop');
+  var xt = document.getElementById('xToday');
+  if (tt && xt){
+    tt.addEventListener('click', function(){ xt.click(); });
+    var syncTT = function(){ tt.hidden = xt.dataset.now === 'true'; };
+    new MutationObserver(syncTT).observe(xt, {attributes:true, attributeFilter:['data-now']});
+    syncTT();
+  }
+
+  /* chips: show the right-edge fade only while more chips are off-screen */
+  var c = document.getElementById('filters');
+  if (c){
+    var upd = function(){
+      c.classList.toggle('more-right', c.scrollLeft + c.clientWidth < c.scrollWidth - 4);
+    };
+    c.addEventListener('scroll', upd, {passive:true});
+    window.addEventListener('resize', upd);
+    new MutationObserver(upd).observe(c, {childList:true});
+    upd();
+  }
+})();
+</script>
+
+<script>
+(function(){
+  /* the saved check: flash it whenever the page writes to storage */
+  var tick = document.getElementById('savedTick');
+  if (tick && window.Storage){
+    var t, orig = Storage.prototype.setItem;
+    var flash = function(){
+      tick.classList.remove('show'); void tick.offsetWidth; tick.classList.add('show');
+      clearTimeout(t); t = setTimeout(function(){ tick.classList.remove('show'); }, 1100);
+    };
+    Storage.prototype.setItem = function(){
+      var r = orig.apply(this, arguments);
+      flash();
+      return r;
+    };
+  }
+
+  /* bump a number when its text changes */
+  function bumpIfChanged(el){
+    var now = el.textContent;
+    if (el.dataset.last === undefined){ el.dataset.last = now; return; }
+    if (el.dataset.last === now) return;
+    el.dataset.last = now;
+    el.classList.remove('num-bump'); void el.offsetWidth; el.classList.add('num-bump');
+  }
+
+  ['sP','sA','sO'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.dataset.last = el.textContent;
+    new MutationObserver(function(){ bumpIfChanged(el); })
+      .observe(el, {childList:true, characterData:true, subtree:true});
+  });
+
+  /* filter chip counts */
+  var f = document.getElementById('filters');
+  if (f){
+    var scanChips = function(){
+      f.querySelectorAll('.chip small').forEach(bumpIfChanged);
+    };
+    new MutationObserver(scanChips).observe(f, {childList:true, characterData:true, subtree:true});
+    scanChips();
+  }
+})();
+</script>
+
+<script>
+(function(){
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var list = document.getElementById('list');
+
+  /* 1. ripple on the number circle after a tap */
+  if (list && !reduce){
+    list.addEventListener('click', function(e){
+      var row = e.target.closest && e.target.closest('.row'); if (!row) return;
+      var id = row.dataset.id;
+      var nr = list.querySelector('.row[data-id="' + id + '"] .rn');
+      if (!nr) return;
+      var r = document.createElement('span');
+      r.className = 'ripple';
+      nr.appendChild(r);
+      r.addEventListener('animationend', function(){ r.remove(); });
+    });
+  }
+
+  /* 2. green wave when "Mark all present" is confirmed */
+  var allBtn = document.getElementById('xAllP'), badge = document.getElementById('badge');
+  var excBefore = false;
+  document.addEventListener('click', function(e){
+    if (e.target.closest && e.target.closest('#xAllP')) excBefore = !badge.hidden;
+  }, true);
+  if (allBtn && !reduce){
+    allBtn.addEventListener('click', function(){
+      if (!(excBefore && badge.hidden)) return;
+      document.querySelectorAll('#list .row .rn').forEach(function(rn, i){
+        rn.classList.remove('wave'); void rn.offsetWidth;
+        rn.style.animationDelay = (i * 45) + 'ms';
+        rn.classList.add('wave');
+      });
+    });
+  }
+
+  /* 3. shrinking line in the undo bar */
+  var xu = document.getElementById('xundo');
+  if (xu){
+    var bar = document.createElement('i');
+    bar.className = 'xundo-bar';
+    xu.appendChild(bar);
+  }
+
+  /* 5. paper plane flies when a message is sent */
 })();
 </script>
 </body>
