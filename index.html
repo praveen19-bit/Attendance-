@@ -814,6 +814,331 @@ body{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 
 
 </style>
+<style id="x-motion-3">
+/* =====================================================================
+   MOTION 3 (new code only): swipe actions, sliding glass dock pill,
+   paper plane send, rolling numbers, drawn checkmarks
+   ===================================================================== */
+
+/* ---------- 1. swipe actions on student rows ---------- */
+#list .row{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#list .row.sw-drag{
+  z-index:3;transition:none!important;will-change:transform;
+  background:#f7f7fa!important;
+  box-shadow:0 18px 34px -10px rgba(40,40,80,.38),inset 0 1px 0 #fff!important;
+}
+#list .row.sw-drag[data-s="A"]{background:#ffe6cf!important}
+#list .row.sw-drag[data-s="O"]{background:#fff0bd!important}
+.sw-under{position:fixed;z-index:1;pointer-events:none;border-radius:22px;overflow:hidden;
+  display:flex;align-items:center}
+.sw-under.sw-p{background:linear-gradient(150deg,#79d2a8,#3f9f77);justify-content:flex-start}
+.sw-under.sw-a{background:linear-gradient(150deg,#ff8a8a,#e03c3c);justify-content:flex-end}
+.sw-under.sw-o{background:linear-gradient(150deg,#ffd43d,#f0a800);justify-content:flex-end}
+.sw-under.sw-no{filter:saturate(.3) brightness(1.06)}
+.sw-in{display:flex;flex-direction:column;align-items:center;gap:3px;width:70px;color:#fff}
+.sw-in b{font-size:.68rem;font-weight:700;line-height:1}
+.sw-ico{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(255,255,255,.24);transform:scale(.7);opacity:.7;
+  transition:transform .38s cubic-bezier(.3,1.6,.5,1),opacity .2s,background .2s}
+.sw-ico .ic{width:18px;height:18px;stroke-width:2.5;color:#fff}
+.sw-under.armed .sw-ico{transform:scale(1.15);opacity:1;background:rgba(255,255,255,.36)}
+
+/* ---------- 2. sliding glass pill in the dock ---------- */
+.dock .dock-pill{
+  position:absolute;left:0;top:0;z-index:0;pointer-events:none;width:68px;height:50px;border-radius:25px;
+  background:linear-gradient(160deg,rgba(255,176,70,.92) 0%,rgba(244,118,8,.86) 60%,rgba(236,98,0,.9) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,218,168,.85),
+    inset 2px 3px 5px -2px rgba(255,255,255,.95),
+    inset -2px -3px 6px -2px rgba(255,205,130,.65),
+    inset 0 0 18px rgba(255,196,110,.5),
+    0 14px 28px -8px rgba(238,106,0,.6),
+    0 2px 6px rgba(150,60,0,.25);
+  will-change:transform;
+}
+.dock.has-pill button{position:relative;z-index:1;
+  transition:transform .5s cubic-bezier(.34,1.56,.64,1),color .28s ease,--glow .35s ease}
+.dock.has-pill button[aria-selected="true"]{
+  background:none!important;box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.dock.has-pill button[aria-selected="true"]::before,
+.dock.has-pill button[aria-selected="true"]::after{display:none!important}
+
+/* ---------- 3. paper plane ---------- */
+.plane-fly{position:fixed;z-index:70;width:30px;height:30px;pointer-events:none;overflow:visible;
+  fill:#ffb23d;stroke:#c25200;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round;
+  filter:drop-shadow(0 6px 8px rgba(150,60,0,.3));will-change:transform,opacity}
+.plane-trail{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:69;pointer-events:none;overflow:visible}
+.plane-trail path{fill:none;stroke:rgba(238,106,0,.55);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- 4. rolling numbers ---------- */
+.roll{display:inline-flex;font-variant-numeric:tabular-nums}
+.roll .rd{display:inline-block;position:relative;width:.62em;height:1em;text-align:center;line-height:1;
+  contain:paint;-webkit-clip-path:inset(0);clip-path:inset(0)}
+.roll .rc{display:block;transition:transform .85s cubic-bezier(.22,1,.36,1);will-change:transform}
+.roll .rc i{display:block;height:1em;line-height:1;font-style:normal}
+.roll .rs{display:inline-block;line-height:1}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- 5. drawn checkmarks (Apple Pay style) ---------- */
+.saved-tick{display:none!important}
+.ck{position:fixed;z-index:60;pointer-events:none;opacity:0;--ck:#ee6a00}
+.ck svg{display:block;width:100%;height:100%;overflow:visible}
+.ck .ck-bg{fill:var(--ck);opacity:0}
+.ck .ck-c{fill:none;stroke:var(--ck);stroke-width:3.2;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;opacity:0}
+.ck .ck-p{fill:none;stroke:var(--ck);stroke-width:3.8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1 2;stroke-dashoffset:1;opacity:0}
+.ck-sm{width:28px;height:28px}
+.ck-big{--ck:#3fa57a;left:50%;top:40%;width:112px;height:112px;margin:-56px 0 0 -56px;padding:22px;
+  box-sizing:border-box;border-radius:50%;background:rgba(255,255,255,.8);
+  -webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);
+  box-shadow:0 22px 50px -12px rgba(40,40,80,.35),inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.9)}
+.ck.on{animation:ckLife 1.3s ease both}
+.ck.on .ck-bg{animation:ckBg .4s ease .3s both}
+.ck.on .ck-c{animation:ckDraw .45s cubic-bezier(.65,0,.35,1) both}
+.ck.on .ck-p{animation:ckDraw .34s cubic-bezier(.65,0,.35,1) .32s both}
+@keyframes ckLife{
+  0%{opacity:0;transform:scale(.6)}
+  14%{opacity:1;transform:scale(1.08)}
+  24%{opacity:1;transform:scale(1)}
+  78%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(.94)}
+}
+@keyframes ckDraw{0%{opacity:0;stroke-dashoffset:1}1%{opacity:1;stroke-dashoffset:1}100%{opacity:1;stroke-dashoffset:0}}
+@keyframes ckBg{from{opacity:0}to{opacity:.14}}
+
+@media (prefers-reduced-motion:reduce){
+  .ck.on{animation:ckFade 1.2s ease both}
+  .ck.on .ck-bg{animation:none;opacity:.14}
+  .ck.on .ck-c,.ck.on .ck-p{animation:none;opacity:1;stroke-dashoffset:0}
+  @keyframes ckFade{0%{opacity:0}15%{opacity:1}80%{opacity:1}100%{opacity:0}}
+  .roll .rc{transition:none}
+  .sw-ico{transition:none}
+}
+</style>
+
+<style id="x-cartoon">
+/* =====================================================================
+   CARTOON MOTION (new code only). Squash and stretch, anticipation,
+   overshoot and a mascot. Everything is transform / opacity
+   and switches off for people who prefer reduced motion.
+   ===================================================================== */
+
+/* ---------- 1. mascot "Pip" peeks over the summary card ---------- */
+.summary{position:relative;margin-top:40px}
+.pip{position:absolute;right:26px;top:-46px;width:84px;height:50px;z-index:3;cursor:pointer;
+  transform-origin:50% 100%;touch-action:manipulation;filter:drop-shadow(0 -3px 6px rgba(238,106,0,.2))}
+.pip svg{display:block;width:100%;height:100%;overflow:visible}
+.pip .eyes,.pip .eye,.pip .ant,.pip .hand,.pip .sweat,.pip .mouth,.pip .zz text{transform-box:fill-box}
+.pip .eyes,.pip .eye{transform-origin:50% 50%}
+.pip .eyes{transition:transform .12s ease}
+.pip .eye{transition:transform .18s cubic-bezier(.34,1.6,.5,1)}
+.pip.blink .eyes{transform:scaleY(.08)}
+.pip .pupil,.pip .shine{transition:transform .09s linear,opacity .2s}
+.pip .mouth{transform-origin:50% 0}
+.pip .mouth.pop{animation:pipMouth .38s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pipMouth{0%{transform:scale(.6)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+.pip .sweat{opacity:0;transform-origin:50% 0}
+.pip[data-mood="worried"] .sweat,.pip[data-mood="sad"] .sweat{opacity:1;animation:pipDrip 1.8s ease-in infinite}
+@keyframes pipDrip{
+  0%{transform:translateY(-2px) scale(.7);opacity:0}
+  25%{opacity:1;transform:translateY(0) scale(1)}
+  80%{opacity:1}
+  100%{transform:translateY(7px) scale(.9);opacity:0}
+}
+.pip .ant{transform-origin:0 100%;animation:pipAnt 3.2s ease-in-out infinite}
+@keyframes pipAnt{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(7deg)}}
+.pip[data-react="cheer"] .ant{animation:pipAntFast .28s ease-in-out infinite}
+@keyframes pipAntFast{0%,100%{transform:rotate(-16deg)}50%{transform:rotate(16deg)}}
+.pip .hand{transform-origin:50% 100%;transition:transform .4s cubic-bezier(.34,1.7,.5,1)}
+.pip[data-react="cheer"] .hl{transform:translate(-3px,-20px) rotate(-24deg)}
+.pip[data-react="cheer"] .hr{transform:translate(3px,-20px) rotate(24deg)}
+.pip[data-react="salute"] .hr{transform:translate(-9px,-22px) rotate(-35deg)}
+.pip[data-react="wink"] .eye:nth-child(2){transform:scaleY(.1)}
+.pip[data-react="gasp"] .eye{transform:scale(1.14)}
+.pip[data-mood="sleep"] .eyes{transform:scaleY(.1)}
+.pip[data-mood="sleep"] .pupil,.pip[data-mood="sleep"] .shine{opacity:0}
+.pip .zz{opacity:0;font:700 9px 'Urbanist',system-ui,sans-serif;fill:#8b91b8}
+.pip[data-mood="sleep"] .zz{opacity:1}
+.pip .zz text{transform-origin:50% 100%;opacity:0}
+.pip[data-mood="sleep"] .zz text{animation:pipZ 2.6s ease-in-out infinite}
+.pip .zz text:nth-child(2){animation-delay:.8s;font-size:11px}
+.pip .zz text:nth-child(3){animation-delay:1.6s;font-size:13px}
+@keyframes pipZ{
+  0%{opacity:0;transform:translate(0,0) scale(.5)}
+  25%{opacity:1}
+  100%{opacity:0;transform:translate(9px,-16px) scale(1.15)}
+}
+
+/* ---------- 2. faces on the roll-number circles ---------- */
+.rn{transition:color .22s ease}
+.rn .face{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;color:var(--fc,#3a3a42)}
+.rn.has-face{color:transparent!important}
+.row[data-s="A"] .rn .face{--fc:#fff}
+.row[data-s="O"] .rn .face{--fc:#3d2a00}
+/* the old plain pop is replaced by the squash and jelly below */
+.row.pop .rn{animation:none}
+
+/* ---------- smoke puff (used by the paper plane) + star-shaped confetti ---------- */
+.xconf{clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);border-radius:0!important;aspect-ratio:1;height:auto!important}
+.puff{position:fixed;z-index:70;border-radius:50%;pointer-events:none;will-change:transform,opacity;
+  box-shadow:inset -3px -4px 0 rgba(139,145,184,.25),0 3px 8px rgba(40,40,80,.1)}
+.streak{position:fixed;z-index:68;height:3px;margin-top:-1.5px;border-radius:2px;pointer-events:none;transform-origin:0 50%;
+  background:linear-gradient(90deg,rgba(255,178,61,.95),rgba(255,178,61,0))}
+
+/* ---------- 7. elastic ring and sloshing bars ---------- */
+.ring .val{transition:stroke-dashoffset .95s cubic-bezier(.3,1.4,.5,1)}
+.bar i{position:relative;overflow:hidden;transition:width .85s cubic-bezier(.34,1.5,.5,1)}
+.bar i::after{content:'';position:absolute;top:0;right:0;bottom:0;width:60%;border-radius:4px;
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.6))}
+.bar.slosh{animation:barWob .7s ease-out}
+.bar.slosh i::after{animation:slosh .95s ease-out}
+@keyframes barWob{0%{transform:scaleY(1)}25%{transform:scaleY(1.7)}55%{transform:scaleY(.85)}80%{transform:scaleY(1.12)}100%{transform:scaleY(1)}}
+@keyframes slosh{0%{transform:translateX(-70%)}30%{transform:translateX(18%)}55%{transform:translateX(-14%)}78%{transform:translateX(6%)}100%{transform:translateX(0)}}
+
+/* ---------- 11. dock: the old scale-pop is replaced by a hop ---------- */
+.dock button[aria-selected="true"] svg{animation:none}
+
+/* ---------- 5. speech-bubble toast ---------- */
+.toast{
+  padding:12px 20px;border-radius:22px;background:#fff;transform-origin:28px 100%;
+  transform:translate(-50%,-14px) scale(.3) rotate(-5deg);opacity:0;pointer-events:none;
+  transition:transform .5s cubic-bezier(.34,1.8,.5,1),opacity .15s ease;
+}
+.toast::after{
+  content:'';position:absolute;left:22px;bottom:-7px;width:16px;height:16px;background:#fff;
+  border-right:1px solid #fff;border-bottom:1px solid #fff;border-bottom-right-radius:5px;
+  transform:rotate(45deg) skew(8deg,8deg);box-shadow:5px 5px 8px -3px rgba(40,40,80,.16);
+}
+.toast.show{transform:translate(-50%,0) scale(1) rotate(0deg);opacity:1}
+@keyframes bubWob{0%,100%{rotate:0deg}30%{rotate:-1.6deg}60%{rotate:1.2deg}}
+.toast.show{animation:bubWob .7s ease .3s}
+
+/* ---------- 6 + 12. bouncy list entrance, drifting blobs ---------- */
+@media (prefers-reduced-motion:no-preference){
+  @keyframes rowDrop{
+    0%{opacity:0;transform:translateY(-28px) scale(.9,1.14);animation-timing-function:cubic-bezier(.5,0,.9,.5)}
+    52%{opacity:1;transform:translateY(5px) scale(1.07,.9);animation-timing-function:ease-out}
+    72%{transform:translateY(-3px) scale(.98,1.03);animation-timing-function:ease-in-out}
+    100%{opacity:1;transform:none}
+  }
+  .row.rv.in{animation-name:rowDrop,floatD;animation-duration:.78s,var(--fdur,6s);animation-timing-function:ease,ease-in-out}
+  .row.rv.in:nth-child(2n){animation-name:rowDrop,floatB}
+  .row.rv.in:nth-child(5n){animation-name:rowDrop,floatC}
+
+  @keyframes blobA{0%{translate:0 0}50%{translate:26px -18px}100%{translate:-14px 22px}}
+  @keyframes blobB{0%{translate:0 0}50%{translate:-22px 20px}100%{translate:18px -26px}}
+  .bg i{animation:blobA 19s ease-in-out infinite alternate;transition:scale 3.5s ease-in-out}
+  .bg .b2,.bg .b4,.bg .b6{animation-name:blobB;animation-duration:23s}
+  .bg .b3{animation-duration:27s;animation-delay:-9s}
+  .bg .b5{animation-duration:21s;animation-delay:-5s}
+  body.is-idle .bg i{scale:1.18}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .pip .ant,.pip .sweat,.pip .zz text,.pip .mouth.pop,.toast.show,.bar.slosh,.bar.slosh i::after{animation:none!important}
+  .toast{transform:translate(-50%,0);transition:opacity .2s ease}
+  .toast.show{opacity:1}
+  .ring .val,.bar i{transition-duration:.3s;transition-timing-function:ease}
+}
+/* ---------- round 2: swipe feel, flights, flips, pull-to-refresh, small touches ---------- */
+html,body{overscroll-behavior-y:contain}
+.pip{transition:rotate .3s cubic-bezier(.34,1.6,.5,1),scale .3s}
+.pip[data-react="squint"] .eye{transform:scaleY(.5)}
+.pip .mag{position:absolute;left:-12px;top:4px;font-size:18px;font-style:normal;opacity:0;pointer-events:none;
+  transform:scale(.4) rotate(-20deg);transition:opacity .2s,transform .35s cubic-bezier(.34,1.8,.5,1)}
+.pip[data-react="squint"] .mag{opacity:1;transform:scale(1) rotate(-12deg)}
+.nchip{position:fixed;z-index:72;pointer-events:none;padding:5px 11px;border-radius:999px;white-space:nowrap;
+  font:700 .72rem 'Urbanist',system-ui,sans-serif;color:#fff;background:linear-gradient(150deg,#ff8a8a,#e03c3c);
+  box-shadow:0 6px 14px rgba(224,60,60,.4);transform:translate(-50%,-50%)}
+.shrug{font-size:2rem;line-height:1;margin-bottom:6px;animation:shrugWob 1.6s ease-in-out infinite}
+@keyframes shrugWob{0%,100%{transform:rotate(-8deg) scale(1,1)}50%{transform:rotate(8deg) scale(1.08,.94)}}
+.tag.ghost{rotate:6deg;scale:1.1}
+@media (prefers-reduced-motion:no-preference){
+  @keyframes xfInF{0%{opacity:0;transform:scale(.84) skewX(-7deg)}55%{opacity:1;transform:scale(1.03) skewX(2.5deg)}100%{opacity:1;transform:none}}
+  @keyframes xfInB{0%{opacity:0;transform:scale(1.12) skewX(7deg)}55%{opacity:1;transform:scale(.98) skewX(-2deg)}100%{opacity:1;transform:none}}
+  @keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(240,122,0,.5)}60%{box-shadow:0 0 0 6px rgba(240,122,0,0)}}
+  .day.has em{animation:dotPulse 2.4s ease-out infinite}
+  .day.has[aria-pressed="true"] em{animation:dotGrow .45s cubic-bezier(.3,1.6,.5,1) both,dotPulse 2.4s ease-out .5s infinite}
+}
+@media (prefers-reduced-motion:reduce){.shrug{animation:none}}
+/* ---------- round 3: intro, costumes, pendulum, wave, balloon, slots, stamp, tilt ---------- */
+.row{position:relative}
+.pip .cos{display:none}
+.pip[data-tm="day"] .sun{display:block}
+.pip[data-tm="night"] .cap{display:block}
+.pip svg{transform-origin:50% 100%}
+.stamp{position:absolute;right:62px;top:50%;margin-top:-15px;padding:2px 9px;border:3px solid #e03c3c;border-radius:6px;
+  color:#e03c3c;font:700 .8rem 'Urbanist',system-ui,sans-serif;letter-spacing:.12em;pointer-events:none;z-index:2;
+  background:rgba(255,255,255,.55);transform:rotate(-14deg)}
+.rn .face .e{transform-box:fill-box;transform-origin:center}
+.slot{position:fixed;z-index:60;pointer-events:none;display:flex;align-items:center;white-space:nowrap}
+body.tilt .summary,body.tilt #view-message .card,body.tilt #view-template .card{
+  transform:perspective(900px) rotateX(var(--tx,0deg)) rotateY(var(--ty,0deg))}
+</style>
+<script id="x-motion-override">
+/* The phone's "reduce motion" setting was silently turning every animation off. This makes the app keep its
+   animations anyway. To go back to the calm behaviour: localStorage['cartoon-motion'] = 'calm' */
+(function(){
+  try {
+    var os = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var calm = false; try { calm = window.localStorage['cartoon-motion'] === 'calm'; } catch(e){}
+    if (!os || calm) return;
+    var mm = window.matchMedia.bind(window);
+    window.matchMedia = function(s){
+      s = String(s);
+      if (!/prefers-reduced-motion/.test(s)) return mm(s);
+      return {matches: /no-preference/.test(s), media: s, onchange: null,
+              addListener: function(){}, removeListener: function(){}, addEventListener: function(){}, removeEventListener: function(){}, dispatchEvent: function(){ return false; }};
+    };
+    Array.prototype.forEach.call(document.querySelectorAll('style'), function(st){
+      var t = st.textContent, n = t.replace(/\(\s*prefers-reduced-motion\s*:\s*no-preference\s*\)/g, '(min-width:0px)')
+                                   .replace(/\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)/g, '(min-width:99999px)');
+      if (n !== t) st.textContent = n;
+    });
+  } catch(e){}
+})();
+</script>
+<style id="x-characters">
+/* =====================================================================
+   NEW CHARACTERS (new file, new code only):  Zip (share button + flight)  /  bar buddies
+   ===================================================================== */
+
+/* ---------- Zip: the paper-plane pilot ---------- */
+.zip{overflow:visible;animation:zipWig 2.8s ease-in-out infinite;transform-origin:50% 50%}
+#shareBtn .zip{width:26px;height:26px}
+@keyframes zipWig{0%,60%,100%{rotate:0deg}12%{rotate:-9deg}28%{rotate:7deg}44%{rotate:-4deg}}
+.zip .zw{transform-box:fill-box;transform-origin:100% 0;animation:zipFlap 1.4s ease-in-out infinite}
+.plane-fly .zw{animation:zipFlap .16s linear infinite}
+@keyframes zipFlap{0%,100%{rotate:-9deg}50%{rotate:6deg}}
+
+/* ---------- bar buddies ---------- */
+.stat{position:relative}
+.bud{position:absolute;width:22px;height:22px;pointer-events:none;z-index:2;left:0;top:0;
+  transition:left .85s cubic-bezier(.34,1.5,.5,1)}
+.bud svg{display:block;width:100%;height:100%;overflow:visible}
+.rocket .fl{transform-box:fill-box;transform-origin:100% 50%;animation:budFlame .18s ease-in-out infinite alternate}
+@keyframes budFlame{from{transform:scale(1,1)}to{transform:scale(1.35,.8)}}
+.rocket.full svg{animation:budShake .12s linear infinite}
+@keyframes budShake{0%,100%{transform:translate(0,0)}25%{transform:translate(-.8px,.6px)}75%{transform:translate(.8px,-.6px)}}
+.snail .sn-e{transform-box:fill-box;transform-origin:50% 100%;animation:budEye 1.6s ease-in-out infinite}
+@keyframes budEye{0%,100%{rotate:-8deg}50%{rotate:9deg}}
+.guard svg{animation:budBob .5s ease-in-out infinite alternate}
+@keyframes budBob{from{transform:translateY(0)}to{transform:translateY(-1.8px)}}
+.guard .lg{transform-box:fill-box;transform-origin:50% 0;animation:budLeg .5s ease-in-out infinite alternate}
+.guard .lg2{animation-direction:alternate-reverse}
+@keyframes budLeg{from{rotate:-16deg}to{rotate:16deg}}
+</style>
+<style id="x-ios-tabs">
+/* iPhone-style page change: the new page slides in from the side while the old one drifts away
+   a shorter distance (parallax), both on iOS's own easing curve. Direction follows the tab order. */
+@keyframes xfInF{from{opacity:0;transform:translateX(34%)}to{opacity:1;transform:none}}
+@keyframes xfInB{from{opacity:0;transform:translateX(-34%)}to{opacity:1;transform:none}}
+@keyframes xfOutF{from{opacity:1;transform:none}to{opacity:0;transform:translateX(-22%)}}
+@keyframes xfOutB{from{opacity:1;transform:none}to{opacity:0;transform:translateX(22%)}}
+.xf-in.xf-fwd,.xf-in.xf-back{animation-duration:.46s;animation-timing-function:cubic-bezier(.32,.72,0,1)}
+.xf-out.xf-fwd,.xf-out.xf-back{animation-duration:.4s;animation-timing-function:cubic-bezier(.32,.72,0,1)}
+body{overflow-x:clip}
+</style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -1523,18 +1848,44 @@ body{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
     if (e.target === el) el.classList.remove('pg-r','pg-l');
   }));
 
+  /* rolling numbers: each digit sits in a 0-9 column that slides to its new value, like an odometer */
   function tween(el, to, suf){
     suf = suf || '';
     const from = el._v == null ? 0 : el._v;
     el._v = to;
     cancelAnimationFrame(el._r);
-    if (!MOTION || from === to){ el.textContent = to + suf; return; }
-    const t0 = performance.now(), dur = 450;
-    (function step(t){
-      const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
-      el.textContent = Math.round(from + (to - from) * e) + suf;
-      if (k < 1) el._r = requestAnimationFrame(step);
-    })(t0);
+    if (!MOTION){ el.textContent = to + suf; return; }
+    if (from === to && el._roll) return;
+    roll(el, from, to, suf);
+  }
+  function roll(el, from, to, suf){
+    const str = String(to), n = str.length, fstr = String(from);
+    let h = el._roll;
+    if (!h || h.n !== n || h.suf !== suf || !el.contains(h.root)){
+      el.textContent = '';
+      const root = document.createElement('span'); root.className = 'roll'; root.setAttribute('aria-hidden', 'true');
+      const cols = [];
+      for (let i = 0; i < n; i++){
+        const cell = document.createElement('span'); cell.className = 'rd';
+        const col = document.createElement('span'); col.className = 'rc';
+        col.innerHTML = '<i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i>';
+        const fd = fstr.charAt(fstr.length - n + i);              /* digits line up from the right */
+        col.style.transition = 'none';
+        col.style.transform = 'translateY(-' + (fd === '' ? 0 : fd) + 'em)';
+        cell.appendChild(col); root.appendChild(cell); cols.push(col);
+      }
+      if (suf){ const s = document.createElement('span'); s.className = 'rs'; s.textContent = suf; root.appendChild(s); }
+      const sr = document.createElement('span'); sr.className = 'sr';
+      el.appendChild(root); el.appendChild(sr);
+      h = el._roll = {n, suf, root, cols, sr};
+      void root.offsetWidth;
+      cols.forEach(c => { c.style.transition = ''; });
+    }
+    h.sr.textContent = to + suf;
+    h.cols.forEach((c, i) => {
+      c.style.transitionDelay = ((n - 1 - i) * 45) + 'ms';       /* ones digit first, then tens */
+      c.style.transform = 'translateY(-' + str.charAt(i) + 'em)';
+    });
   }
   function bump(el){
     if (!MOTION) return;
@@ -2061,5 +2412,1158 @@ body{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
   /* 5. paper plane flies when a message is sent */
 })();
 </script>
+<script id="x-motion-3-js">
+/* =====================================================================
+   MOTION 3 (new code only). Works through the page's own buttons and
+   events, so the original logic is not touched.
+   1 swipe actions  2 sliding dock pill  3 paper plane  5 drawn checkmarks
+   (4 rolling numbers lives inside tween() in the main script)
+   ===================================================================== */
+(function(){
+  'use strict';
+  var $ = function(s){ return document.querySelector(s); };
+  var reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var canAnim = typeof Element.prototype.animate === 'function';
+  var SPRING = 'cubic-bezier(.34,1.56,.64,1)';
+  function buzz(ms){ try { if (navigator.vibrate) navigator.vibrate(ms); } catch(e){} }
+
+  /* ---------- 1. swipe actions: right = Present, left = Absent, long left = On-duty ---------- */
+  (function(){
+    var list = $('#list');
+    if (!list || !window.PointerEvent) return;
+    var ORDER = ['P','A','O'], T = 56, T2 = 124, MAXP = 86, MAXL = 112;
+    var CHECK = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+    var CROSS = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+    var DUTY = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
+    var UI = {P:{c:'sw-p', i:CHECK, t:'Present'}, A:{c:'sw-a', i:CROSS, t:'Absent'}, O:{c:'sw-o', i:DUTY, t:'On-duty'}};
+    var st = null, suppressUntil = 0, internal = false;
+
+    /* the page cycles Present > Absent > On-duty on each tap, so we tap the row as many times as needed */
+    function need(cur, target){ return (ORDER.indexOf(target) - ORDER.indexOf(cur) + 3) % 3; }
+
+    function mkUnder(row){
+      var r = row.getBoundingClientRect(), u = document.createElement('div');
+      u.className = 'sw-under';
+      u.style.cssText = 'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+      u.innerHTML = '<span class="sw-in"><span class="sw-ico"></span><b></b></span>';
+      document.body.appendChild(u);
+      return u;
+    }
+    function setUnder(u, tgt, can){
+      var ui = UI[tgt];
+      u.className = 'sw-under ' + ui.c + (can ? '' : ' sw-no');
+      u.querySelector('.sw-ico').innerHTML = ui.i;
+      u.querySelector('b').textContent = ui.t;
+    }
+    function fadeUnder(s){
+      var u = s.under; if (!u) return; s.under = null;
+      var gone = function(){ if (u.parentNode) u.parentNode.removeChild(u); };
+      if (canAnim && !reduce){ var a = u.animate([{opacity:1},{opacity:0}], {duration:280, delay:40, fill:'forwards'}); a.onfinish = gone; setTimeout(gone, 700); }
+      else gone();
+    }
+    function spring(el, dx, ms){
+      if (!canAnim || reduce) return null;
+      return el.animate(
+        [{transform:'translateX(' + dx + 'px) scale(1.03)'}, {transform:'translateX(0) scale(1)'}],
+        {duration:ms, easing:SPRING});
+    }
+
+    list.addEventListener('pointerdown', function(e){
+      if (st) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      var row = e.target.closest && e.target.closest('.row'); if (!row) return;
+      st = {row:row, id:row.dataset.id, cur:row.dataset.s || 'P', pid:e.pointerId, x:e.clientX, y:e.clientY,
+            locked:false, shown:0, sign:0, tgt:'P', can:false, armed:false, under:null, us:''};
+    });
+
+    list.addEventListener('pointermove', function(e){
+      if (!st || e.pointerId !== st.pid) return;
+      var dx = e.clientX - st.x, dy = e.clientY - st.y;
+      if (!st.locked){
+        if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)){ st = null; return; }      /* it is a scroll */
+        if (Math.abs(dx) < 9 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+        st.locked = true;
+        try { st.row.setPointerCapture(st.pid); } catch(_){}
+        st.row.classList.add('sw-drag');
+        st.under = mkUnder(st.row);
+      }
+      move(dx);
+    });
+
+    /* right = Present. Left = Absent; keep pulling left past the second notch = On-duty */
+    function aimFor(cur, sign, a){
+      if (sign > 0) return 'P';
+      if (cur === 'A') return 'O';
+      if (cur === 'O') return 'A';
+      return a >= T2 ? 'O' : 'A';
+    }
+    function move(dx){
+      var s = st, a = Math.abs(dx), sign = dx < 0 ? -1 : 1, cur = s.cur, shown;
+      var tgt = aimFor(cur, sign, a);
+      var can = sign > 0 ? cur !== 'P' : true;
+      var armAt = (sign < 0 && cur === 'A') ? T2 : T;                    /* Absent row: only On-duty is left, so it needs the long pull */
+      if (can){
+        if (a <= T) shown = a;
+        else shown = sign > 0 ? Math.min(T + (a - T) * .3, MAXP) : Math.min(T + (a - T) * .6, MAXL);
+      } else shown = Math.min(a * .35, 26);                              /* already Present: barely moves */
+      shown *= sign;
+      s.shown = shown; s.sign = sign; s.can = can;
+      s.row.style.transform = 'translateX(' + shown + 'px) scale(1.03)';
+      var u = s.under, key = tgt + '|' + can, switched = s.us !== '' && s.us !== key && s.tgt !== tgt;
+      if (s.us !== key){
+        s.us = key; s.tgt = tgt; setUnder(u, tgt, can); if (!can) s.armed = false;
+        if (switched && can && a >= T && canAnim && !reduce){
+          var ico = u.querySelector('.sw-ico');
+          ico.animate([{transform:'scale(.6)'}, {transform:'scale(1.35)', offset:.55}, {transform:'scale(1.15)'}], {duration:320, easing:'ease-out'});
+          buzz(14);
+        }
+      }
+      var w = Math.max(0, Math.abs(shown) - 3);
+      var clip = sign > 0 ? 'inset(0 calc(100% - ' + w + 'px) 0 0)' : 'inset(0 0 0 calc(100% - ' + w + 'px))';
+      u.style.clipPath = clip; u.style.webkitClipPath = clip;
+      var armed = can && a >= armAt;
+      if (armed !== s.armed){ s.armed = armed; u.classList.toggle('armed', armed); if (armed) buzz(9); }
+    }
+
+    function finish(e, cancelled){
+      if (!st || e.pointerId !== st.pid) return;
+      var s = st; st = null;
+      if (!s.locked) return;
+      suppressUntil = performance.now() + 400;       /* swallow the click that follows a drag */
+      try { s.row.releasePointerCapture(s.pid); } catch(_){}
+      var n = need(s.cur, s.tgt);
+      if (!cancelled && s.armed && n > 0) commit(s, n); else release(s);
+    }
+    list.addEventListener('pointerup', function(e){ finish(e, false); });
+    list.addEventListener('pointercancel', function(e){ finish(e, true); });
+
+    function release(s){
+      var row = s.row;
+      row.style.transform = '';
+      var a = spring(row, s.shown, 520);
+      if (a) a.onfinish = function(){ row.classList.remove('sw-drag'); }; else row.classList.remove('sw-drag');
+      setTimeout(function(){ row.classList.remove('sw-drag'); }, 700);
+      fadeUnder(s);
+    }
+    function commit(s, n){
+      internal = true;
+      for (var i = 0; i < n; i++){
+        var r = list.querySelector('.row[data-id="' + s.id + '"]'); if (!r) break;
+        r.click();
+      }
+      internal = false;
+      var nr = list.querySelector('.row[data-id="' + s.id + '"]');
+      if (nr) spring(nr, s.shown, 560);
+      fadeUnder(s);
+    }
+
+    list.addEventListener('click', function(e){
+      if (internal) return;
+      if (performance.now() < suppressUntil){ e.stopPropagation(); e.preventDefault(); }
+    }, true);
+  })();
+
+  /* ---------- 2. dock: one glass pill that slides and stretches between tabs ---------- */
+  (function(){
+    var dock = $('.dock'); if (!dock) return;
+    var pill = document.createElement('span');
+    pill.className = 'dock-pill'; pill.setAttribute('aria-hidden', 'true');
+    dock.insertBefore(pill, dock.firstChild);
+    dock.classList.add('has-pill');
+    var px = null;
+
+    function place(animate){
+      var b = dock.querySelector('button[aria-selected="true"]'); if (!b) return;
+      var x = b.offsetLeft, y = b.offsetTop, w = b.offsetWidth, h = b.offsetHeight;
+      pill.style.width = w + 'px'; pill.style.height = h + 'px'; pill.style.borderRadius = (h / 2) + 'px';
+      var from = px; px = x;
+      var to = 'translate(' + x + 'px,' + y + 'px)';
+      pill.style.transform = to;
+      if (animate && !reduce && canAnim && from !== null && from !== x){
+        var d = x - from, k = 1 + Math.min(Math.abs(d) / 110, 1.1) * .45;
+        pill.animate([
+          {transform:'translate(' + from + 'px,' + y + 'px) scale(1,1)'},
+          {transform:'translate(' + (from + d / 2) + 'px,' + y + 'px) scale(' + k + ',.9)', offset:.42},
+          {transform:to + ' scale(1,1)'}
+        ], {duration:560, easing:'cubic-bezier(.34,1.25,.5,1)'});
+      }
+    }
+    place(false);
+    new MutationObserver(function(){ place(true); })
+      .observe(dock, {attributes:true, attributeFilter:['aria-selected'], subtree:true});
+    if ('ResizeObserver' in window) new ResizeObserver(function(){ place(false); }).observe(dock);
+    window.addEventListener('resize', function(){ place(false); });
+    window.addEventListener('load', function(){ place(false); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ place(false); });
+  })();
+
+  /* ---------- 3. paper plane when the message is shared (cartoon: launch puff, loop-the-loop, speed lines) ---------- */
+  (function(){
+    function fly(btn){
+      if (reduce || !canAnim) return;
+      var msg = $('#msg'); if (!msg || !msg.value.trim()) return;
+      var ic = btn.querySelector('svg') || btn, r = ic.getBoundingClientRect();
+      var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      var p0 = {x:cx - 9, y:cy + 8}, p2 = {x:window.innerWidth + 80, y:-100};
+      var dX = p2.x - p0.x, dY = p0.y - p2.y;
+      var p1 = {x:p0.x + dX * .22, y:p0.y - dY * .8};
+      function B(u){ var a = (1-u)*(1-u), b = 2*(1-u)*u, c = u*u; return {x:a*p0.x + b*p1.x + c*p2.x, y:a*p0.y + b*p1.y + c*p2.y}; }
+      var DUR = 1350, WIND = .12, N = 72, ease = function(t){ return Math.pow(t, 1.8); };
+
+      /* the route: the swoop, with a loop-the-loop dropped in at 30% of the curve */
+      var LU = .3, R = 24, K1 = 22, K2 = 30, K3 = 36, pts = [], i;
+      for (i = 0; i <= K1; i++) pts.push(B(LU * i / K1));
+      var e = .002, a0 = B(LU - e), a1 = B(LU + e), tl = Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1;
+      var tx = (a1.x - a0.x) / tl, ty = (a1.y - a0.y) / tl, nx = -ty, ny = tx, bp = B(LU);
+      for (i = 1; i <= K2; i++){
+        var ph = i / K2 * Math.PI * 2, sn = Math.sin(ph), cs = 1 - Math.cos(ph);
+        pts.push({x:bp.x + R * (sn * tx + cs * nx), y:bp.y + R * (sn * ty + cs * ny)});
+      }
+      for (i = 1; i <= K3; i++) pts.push(B(LU + (1 - LU) * i / K3));
+
+      var cum = [0], hd = [], prevH = 0, total;
+      for (i = 1; i < pts.length; i++) cum.push(cum[i-1] + Math.hypot(pts[i].x - pts[i-1].x, pts[i].y - pts[i-1].y));
+      total = cum[cum.length - 1];
+      for (i = 0; i < pts.length; i++){                              /* heading per point, unwrapped so the loop spins smoothly */
+        var j = Math.min(i, pts.length - 2), h = Math.atan2(pts[j+1].y - pts[j].y, pts[j+1].x - pts[j].x);
+        if (i){ while (h - prevH > Math.PI) h -= 2 * Math.PI; while (h - prevH < -Math.PI) h += 2 * Math.PI; }
+        hd.push(h); prevH = h;
+      }
+      function at(s){                                                 /* s = fraction of the route's length */
+        var tgt = Math.max(0, Math.min(1, s)) * total, k = 1;
+        while (k < cum.length - 1 && cum[k] < tgt) k++;
+        var span = cum[k] - cum[k-1] || 1, f = (tgt - cum[k-1]) / span;
+        return {x:pts[k-1].x + (pts[k].x - pts[k-1].x) * f, y:pts[k-1].y + (pts[k].y - pts[k-1].y) * f, h:hd[k-1] + (hd[k] - hd[k-1]) * f};
+      }
+
+      /* launch: the button squashes and a puff of smoke pops out */
+      if (window.CartoonFX) CartoonFX.cloud(cx, cy, 18, 6);
+      btn.animate([
+        {transform:'scale(1,1)'},
+        {transform:'scale(1.18,.8)', offset:.25},
+        {transform:'scale(.9,1.12)', offset:.55},
+        {transform:'scale(1,1)'}
+      ], {duration:480, easing:'ease-out'});
+
+      /* the plane */
+      var plane = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      plane.setAttribute('viewBox', '0 0 24 24'); plane.setAttribute('class', 'plane-fly'); plane.setAttribute('aria-hidden', 'true');
+      plane.innerHTML = '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>';
+      plane.style.left = (cx - 15) + 'px'; plane.style.top = (cy - 15) + 'px';
+      document.body.appendChild(plane);
+      var q0 = at(0), kf = [
+        {transform:'translate(0px,0px) rotate(0deg) scale(1)', opacity:1, offset:0},
+        {transform:'translate(' + (p0.x - cx) + 'px,' + (p0.y - cy) + 'px) rotate(' + (q0.h * 180 / Math.PI + 45) + 'deg) scale(1.04)', opacity:1, offset:WIND}
+      ];
+      for (var k = 1; k <= N; k++){
+        var tt = k / N, s = ease(tt), q = at(s);
+        kf.push({transform:'translate(' + (q.x - cx) + 'px,' + (q.y - cy) + 'px) rotate(' + (q.h * 180 / Math.PI + 45) + 'deg) scale(' + (1.04 - .5 * s) + ')',
+                 opacity: tt < .82 ? 1 : Math.max(0, 1 - (tt - .82) / .18), offset: WIND + (1 - WIND) * tt});
+      }
+      var anim = plane.animate(kf, {duration:DUR, easing:'linear', fill:'forwards'});
+
+      /* the trail: a short dash that chases the plane along the same route */
+      var NS = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'plane-trail'); svg.setAttribute('aria-hidden', 'true');
+      var path = document.createElementNS(NS, 'path'), tail = .3;
+      path.setAttribute('d', 'M' + pts.map(function(p){ return p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join('L'));
+      path.setAttribute('pathLength', '1');
+      path.style.strokeDasharray = tail + ' 3'; path.style.strokeDashoffset = tail;
+      svg.appendChild(path); document.body.appendChild(svg);
+
+      /* speed lines peel off the plane's tail */
+      function streak(x, y, deg){
+        var d = document.createElement('i'); d.className = 'streak';
+        d.style.cssText = 'left:' + x + 'px;top:' + y + 'px;width:' + (16 + Math.random() * 14) + 'px;transform:rotate(' + deg + 'deg)';
+        document.body.appendChild(d);
+        var a = d.animate([
+          {transform:'rotate(' + deg + 'deg) scaleX(1)', opacity:.95},
+          {transform:'rotate(' + deg + 'deg) translateX(14px) scaleX(.15)', opacity:0}
+        ], {duration:380, easing:'ease-out', fill:'forwards'});
+        a.onfinish = function(){ if (d.parentNode) d.parentNode.removeChild(d); };
+        setTimeout(function(){ if (d.parentNode) d.parentNode.removeChild(d); }, 700);
+      }
+      var t0 = performance.now(), TD = DUR * 1.15, lastLine = 0;
+      (function step(now){
+        var t = (now - t0) / DUR, head;
+        if (t < WIND){ head = 0; }
+        else if (t <= 1){ head = ease((t - WIND) / (1 - WIND)); }
+        else head = 1 + Math.min(1, (t - 1) / .15) * tail;
+        path.style.strokeDashoffset = (tail - head).toFixed(4);
+        svg.style.opacity = t > 1 ? Math.max(0, 1 - (t - 1) / .15) : 1;
+        if (t > WIND && t < .94 && now - lastLine > 48){
+          lastLine = now;
+          var qq = at(head), c = Math.cos(qq.h), sn2 = Math.sin(qq.h), deg = qq.h * 180 / Math.PI + 180;
+          for (var m = -1; m <= 1; m += 2) streak(qq.x - c * 14 - sn2 * 7 * m, qq.y - sn2 * 14 + c * 7 * m, deg);
+        }
+        if (now - t0 < TD) requestAnimationFrame(step); else svg.remove();
+      })(t0);
+      anim.onfinish = function(){ plane.remove(); };
+      setTimeout(function(){ plane.remove(); svg.remove(); }, DUR * 1.6);
+
+      /* the button's own icon flies away and springs back */
+      if (ic !== btn) ic.animate([
+        {opacity:1, transform:'scale(1)', offset:0},
+        {opacity:0, transform:'scale(.6)', offset:.05},
+        {opacity:0, transform:'scale(.6)', offset:.7},
+        {opacity:1, transform:'scale(1.18)', offset:.86},
+        {opacity:1, transform:'scale(1)', offset:1}
+      ], {duration:1450, easing:'ease-out'});
+    }
+    var a = $('#shareBtn'), b = $('#shareTop');
+    if (a) a.addEventListener('click', function(){ fly(a); });
+    if (b) b.addEventListener('click', function(){ fly(b); });
+  })();
+
+  /* ---------- 5. drawn checkmarks: small "saved", big "everyone present" ---------- */
+  (function(){
+    function mk(cls){
+      var d = document.createElement('div'); d.className = cls; d.setAttribute('aria-hidden', 'true');
+      d.innerHTML = '<svg viewBox="0 0 52 52"><circle class="ck-bg" cx="26" cy="26" r="23"/>' +
+        '<circle class="ck-c" cx="26" cy="26" r="23" transform="rotate(-90 26 26)" pathLength="1"/>' +
+        '<path class="ck-p" d="M15 27.5l7.5 7.5L37.5 19" pathLength="1"/></svg>';
+      document.body.appendChild(d); return d;
+    }
+    var small = mk('ck ck-sm'), big = mk('ck ck-big'), lastSmall = 0;
+    function play(d, ms){
+      d.classList.remove('on'); void d.offsetWidth; d.classList.add('on');
+      clearTimeout(d._t); d._t = setTimeout(function(){ d.classList.remove('on'); }, ms);
+    }
+    function placeSmall(){
+      var t = $('#title'), chip = $('#xchip'), x, y, r;
+      if (t){
+        var rg = document.createRange(); rg.selectNodeContents(t); r = rg.getBoundingClientRect();
+        if (!r.width) r = t.getBoundingClientRect();
+      }
+      if (r && r.bottom > 0 && r.top < window.innerHeight){ x = r.right + 8; y = r.top + r.height / 2 - 14; }
+      else if (chip && chip.classList.contains('show')){ var c = chip.getBoundingClientRect(); x = c.right + 8; y = c.top + c.height / 2 - 14; }
+      else { x = window.innerWidth - 44; y = 14; }
+      small.style.left = x + 'px'; small.style.top = y + 'px';
+    }
+    /* small check: whenever the page saves (same moment the old tick used) */
+    if (window.Storage){
+      var prev = Storage.prototype.setItem;
+      Storage.prototype.setItem = function(){
+        var res = prev.apply(this, arguments);
+        var now = performance.now();
+        if (now - lastSmall > 700){ lastSmall = now; placeSmall(); play(small, 1500); }
+        return res;
+      };
+    }
+    /* big check: "Mark all present" confirmed */
+    var allBtn = $('#xAllP'), badge = $('#badge'), before = false;
+    document.addEventListener('click', function(e){
+      if (e.target.closest && e.target.closest('#xAllP')) before = !badge.hidden;
+    }, true);
+    if (allBtn) allBtn.addEventListener('click', function(){
+      if (before && badge.hidden) play(big, 1500);
+      before = false;
+    });
+  })();
+})();
+</script>
+
+<script id="x-cartoon-js">
+/* =====================================================================
+   CARTOON MOTION (new code only). Works through the page's own buttons,
+   events and DOM, so the original logic and saved data are not touched.
+   1 mascot Pip   2 faces on taps   3 squash + stretch   4 Pip cheers
+   5 speech-bubble toast (CSS)   6 bouncy list (CSS)   7 elastic ring + bars
+   8 bouncing week strip   9 plane flourishes (in the plane block)
+   11 dock hop   12 idle life
+   ===================================================================== */
+(function(){
+  'use strict';
+  var $ = function(s){ return document.querySelector(s); };
+  var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  var reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var FULL = !reduce && typeof Element.prototype.animate === 'function';
+  var list = $('#list'), summary = $('.summary'), badge = $('#badge'), week = $('#week');
+  if (!list || !summary || !badge) return;
+
+  function anim(el, kf, opt){
+    if (!FULL || !el) return null;
+    try { return el.animate(kf, opt); } catch(e){ return null; }
+  }
+  function later(fn, ms){ return setTimeout(fn, ms); }
+  function rm(el){ if (el && el.parentNode) el.parentNode.removeChild(el); }
+  function rnd(a, b){ return a + Math.random() * (b - a); }
+  function buzz(ms){ try { if (navigator.vibrate) navigator.vibrate(ms); } catch(e){} }
+  function reflow(el){ return el.getBoundingClientRect(); }
+
+  /* ---------- shared effect: smoke puff (used by the paper plane) ---------- */
+  function cloud(x, y, sz, n){
+    if (!FULL) return;
+    var cols = ['#ffffff', '#f4f5fb', '#e6e8f4'];
+    for (var i = 0; i < (n || 8); i++){
+      var s = sz * rnd(.6, 1.1), c = document.createElement('i');
+      c.className = 'puff';
+      c.style.cssText = 'left:' + (x - s / 2) + 'px;top:' + (y - s / 2) + 'px;width:' + s + 'px;height:' + s + 'px;background:' + cols[i % 3];
+      document.body.appendChild(c);
+      var ang = rnd(0, Math.PI * 2), dist = rnd(.3, 1) * sz * 1.3;
+      var dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist * .8 - sz * .25;
+      var a = anim(c, [
+        {transform:'translate(0,0) scale(.2)', opacity:.98},
+        {transform:'translate(' + dx * .7 + 'px,' + dy * .7 + 'px) scale(1.15)', opacity:.95, offset:.45},
+        {transform:'translate(' + dx + 'px,' + (dy - 10) + 'px) scale(1.5)', opacity:0}
+      ], {duration:rnd(650, 950), easing:'ease-out', fill:'forwards'});
+      (function(el, an){ if (an) an.onfinish = function(){ rm(el); }; later(function(){ rm(el); }, 1300); })(c, a);
+    }
+  }
+  window.CartoonFX = {cloud:cloud};      /* the paper-plane block uses this for its launch puff */
+
+  /* ---------- 1. mascot "Pip" ---------- */
+  var MOUTH = {
+    happy:['M36 39 Q42 46 48 39', 0], ok:['M37 41 Q42 44 47 41', 0], worried:['M36 44 Q42 38 48 44', 0],
+    sad:['M35 45 Q42 37 49 45', 0], sleep:['M39 41 Q42 44 45 41', 0],
+    grin:['M35 36 Q42 49 49 36 Z', 1], gasp:['M39 38 Q42 48 45 38 Q42 35 39 38 Z', 1]
+  };
+  var pip = document.createElement('div');
+  pip.className = 'pip'; pip.setAttribute('aria-hidden', 'true'); pip.dataset.mood = 'happy';
+  pip.innerHTML =
+    '<svg viewBox="0 0 84 50" focusable="false">' +
+      '<defs><linearGradient id="pipG" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#ffbe55"/><stop offset="1" stop-color="#ee6a00"/></linearGradient></defs>' +
+      '<g class="ant"><path d="M42 9 C41 3 45 0 49 2" fill="none" stroke="#c25200" stroke-width="2.4" stroke-linecap="round"/>' +
+        '<circle cx="49.5" cy="2.5" r="3" fill="#ffd43d" stroke="#c25200" stroke-width="1.4"/></g>' +
+      '<path d="M7 50 C7 24 21 8 42 8 C63 8 77 24 77 50 Z" fill="url(#pipG)"/>' +
+      '<path d="M15 30 C17 21 24 15 33 13" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle cx="21" cy="40" r="4.2" fill="#ff6b6b" fill-opacity=".38"/><circle cx="63" cy="40" r="4.2" fill="#ff6b6b" fill-opacity=".38"/>' +
+      '<g class="eyes">' +
+        '<g class="eye"><ellipse cx="32" cy="29" rx="7.2" ry="8.2" fill="#fff"/><circle class="pupil" cx="32" cy="30" r="3.9" fill="#1c1c20"/><circle class="shine" cx="33.4" cy="28" r="1.2" fill="#fff"/></g>' +
+        '<g class="eye"><ellipse cx="52" cy="29" rx="7.2" ry="8.2" fill="#fff"/><circle class="pupil" cx="52" cy="30" r="3.9" fill="#1c1c20"/><circle class="shine" cx="53.4" cy="28" r="1.2" fill="#fff"/></g>' +
+      '</g>' +
+      '<path class="mouth" d="M36 39 Q42 46 48 39" fill="none" stroke="#7a2e00" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path class="sweat" d="M70 17 C67 22 67 25 70 25 C73 25 73 22 70 17 Z" fill="#8fc7ff" stroke="#fff" stroke-width=".8"/>' +
+      '<g class="hand hl"><rect x="3" y="41" width="13" height="9" rx="4.5" fill="#ffb23d" stroke="#fff" stroke-opacity=".7"/></g>' +
+      '<g class="hand hr"><rect x="68" y="41" width="13" height="9" rx="4.5" fill="#ffb23d" stroke="#fff" stroke-opacity=".7"/></g>' +
+      '<g class="zz"><text x="60" y="14">z</text><text x="64" y="10">z</text><text x="68" y="6">z</text></g>' +
+    '</svg>';
+  summary.appendChild(pip);
+
+  var mouth = pip.querySelector('.mouth'), pupils = pip.querySelectorAll('.pupil,.shine');
+  var mood = 'happy', asleep = false, reactT = 0, lastIn = performance.now();
+
+  function setMouth(k){
+    var m = MOUTH[k]; if (!m) return;
+    mouth.setAttribute('d', m[0]); mouth.setAttribute('fill', m[1] ? '#7a2e00' : 'none');
+    if (FULL){ mouth.classList.remove('pop'); reflow(mouth); mouth.classList.add('pop'); }
+  }
+  function applyMood(){
+    pip.dataset.mood = asleep ? 'sleep' : mood;
+    if (!reactT) setMouth(asleep ? 'sleep' : mood);
+  }
+  function readMood(){
+    var sp = $('#sP'), m = sp && /(\d+)\s*\/\s*(\d+)/.exec(sp.textContent || ''); if (!m) return;
+    var p = +m[1], t = +m[2], r = t ? p / t : 1;
+    var nm = r >= .85 ? 'happy' : r >= .65 ? 'ok' : r >= .4 ? 'worried' : 'sad';
+    if (nm !== mood){ mood = nm; applyMood(); }
+  }
+  function react(name, mouthKey, ms){
+    clearTimeout(reactT);
+    pip.dataset.react = name; setMouth(mouthKey);
+    reactT = later(function(){ reactT = 0; delete pip.dataset.react; setMouth(asleep ? 'sleep' : mood); }, ms || 900);
+  }
+  function hop(big){
+    anim(pip, [
+      {transform:'translateY(0) scale(1,1)'},
+      {transform:'translateY(0) scale(1.14,.8)', offset:.18},
+      {transform:'translateY(-' + (big ? 22 : 14) + 'px) scale(.9,1.16)', offset:.45},
+      {transform:'translateY(0) scale(1.12,.86)', offset:.7},
+      {transform:'translateY(-3px) scale(.98,1.03)', offset:.86},
+      {transform:'translateY(0) scale(1,1)'}
+    ], {duration:big ? 760 : 620, easing:'ease-out'});
+  }
+  function cheer(){ hop(true); react('cheer', 'grin', 1500); }
+
+  /* eyes follow the finger / pointer */
+  var tx = 0, ty = 0, raf = 0;
+  function aim(){
+    raf = 0; if (asleep || !FULL) return;
+    var r = pip.getBoundingClientRect(); if (!r.width) return;
+    var ex = r.left + r.width * .5, ey = r.top + r.height * .58;
+    var dx = tx - ex, dy = ty - ey, d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 110) * 3;
+    var x = (dx / d * k).toFixed(2), y = (dy / d * k * 1.1).toFixed(2);
+    for (var i = 0; i < pupils.length; i++) pupils[i].style.transform = 'translate(' + x + 'px,' + y + 'px)';
+  }
+  function look(x, y){ tx = x; ty = y; if (!raf) raf = requestAnimationFrame(aim); }
+
+  /* idle: Pip dozes off, the blobs breathe; any input wakes him with a startled hop */
+  function sleep(){
+    asleep = true; document.body.classList.add('is-idle'); applyMood();
+    for (var i = 0; i < pupils.length; i++) pupils[i].style.transform = '';
+  }
+  function wake(){
+    asleep = false; document.body.classList.remove('is-idle'); applyMood();
+    react('gasp', 'gasp', 700); hop(false);
+  }
+  function poke(){ lastIn = performance.now(); if (asleep) wake(); }
+  document.addEventListener('pointermove', function(e){ look(e.clientX, e.clientY); poke(); }, {passive:true});
+  document.addEventListener('pointerdown', function(e){ look(e.clientX, e.clientY); poke(); }, {passive:true});
+  document.addEventListener('keydown', poke);
+  window.addEventListener('scroll', poke, {passive:true});
+  setInterval(function(){
+    if (!asleep && !document.hidden && performance.now() - lastIn > 25000) sleep();
+  }, 2000);
+
+  /* blinking */
+  (function blinkLoop(){
+    if (FULL && !asleep && !document.hidden){
+      pip.classList.add('blink'); later(function(){ pip.classList.remove('blink'); }, 150);
+      if (Math.random() < .22) later(function(){
+        pip.classList.add('blink'); later(function(){ pip.classList.remove('blink'); }, 140);
+      }, 330);
+    }
+    later(blinkLoop, rnd(2400, 5600));
+  })();
+
+  /* tapping Pip */
+  pip.addEventListener('click', function(e){
+    e.stopPropagation();
+    var was = asleep; poke(); if (was) return;
+    hop(true); react('wink', 'grin', 900); buzz(10);
+  });
+
+  /* mood follows the attendance numbers */
+  var sPel = $('#sP');
+  if (sPel) new MutationObserver(readMood).observe(sPel, {childList:true, characterData:true, subtree:true});
+  readMood();
+
+  /* ---------- 2 + 3. faces and squash-and-stretch on student taps ---------- */
+  var FACE = {
+    P: '<svg class="face" viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' +
+         '<path d="M10.5 18.5 Q14 13.5 17.5 18.5"/><path d="M22.5 18.5 Q26 13.5 29.5 18.5"/><path d="M11.5 25 Q20 35 28.5 25"/></g></svg>',
+    A: '<svg class="face" viewBox="0 0 40 40" aria-hidden="true"><g fill="currentColor"><circle cx="14" cy="19" r="2.4"/><circle cx="26" cy="19" r="2.4"/>' +
+         '<path d="M29.5 22 q2.6 3.6 0 5.4 q-2.6 -1.8 0 -5.4z" opacity=".75"/></g>' +
+         '<g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
+         '<path d="M9.5 12.5 L17 15"/><path d="M30.5 12.5 L23 15"/><path d="M13 30.5 Q20 23.5 27 30.5"/></g></svg>',
+    O: '<svg class="face" viewBox="0 0 40 40" aria-hidden="true"><g fill="currentColor"><circle cx="14" cy="22" r="2.3"/><circle cx="26" cy="22" r="2.3"/>' +
+         '<path d="M7 15.5 Q8 4.5 20 4.5 Q32 4.5 33 15.5 Z"/><rect x="5.5" y="14.5" width="29" height="3.2" rx="1.6"/>' +
+         '<rect x="28" y="7.5" width="10" height="4" rx="2" transform="rotate(-28 33 9.5)"/></g>' +
+         '<path d="M14 29.5 Q20 33 26 29.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>'
+  };
+  var FACE_KF = {
+    P: [
+      {transform:'scale(.2) translateY(6px)'},
+      {transform:'scale(1.2,.85) translateY(0)', offset:.25},
+      {transform:'scale(.92,1.15) translateY(-6px)', offset:.5},
+      {transform:'scale(1.05,.95) translateY(0)', offset:.75},
+      {transform:'scale(1)'}
+    ],
+    A: [
+      {transform:'scale(.2) rotate(0deg)'},
+      {transform:'scale(1.15) rotate(-14deg)', offset:.25},
+      {transform:'scale(1) rotate(12deg)', offset:.45},
+      {transform:'rotate(-8deg)', offset:.62},
+      {transform:'rotate(5deg)', offset:.78},
+      {transform:'rotate(0deg)'}
+    ],
+    O: [
+      {transform:'scale(.2) rotate(-30deg)'},
+      {transform:'scale(1.15) rotate(10deg)', offset:.3},
+      {transform:'rotate(-6deg)', offset:.55},
+      {transform:'rotate(3deg)', offset:.78},
+      {transform:'rotate(0deg)'}
+    ]
+  };
+  function showFace(row, st){
+    var rn = row.querySelector('.rn'); if (!rn || !FACE[st]) return;
+    rm(rn.querySelector('.face'));
+    var d = document.createElement('div'); d.innerHTML = FACE[st];
+    var f = d.firstChild; rn.appendChild(f); rn.classList.add('has-face');
+    anim(f, FACE_KF[st], {duration:820, easing:'ease-out'});
+    later(function(){
+      var a = anim(f, [{opacity:1}, {opacity:0}], {duration:200, fill:'forwards'});
+      later(function(){ rm(f); rn.classList.remove('has-face'); }, a ? 200 : 0);
+    }, 1050);
+  }
+  function jelly(rn){
+    anim(rn, [
+      {transform:'scale(1)'},
+      {transform:'scale(1.3,.72)', offset:.2},
+      {transform:'scale(.82,1.25)', offset:.45},
+      {transform:'scale(1.12,.92)', offset:.68},
+      {transform:'scale(.97,1.04)', offset:.85},
+      {transform:'scale(1)'}
+    ], {duration:640, easing:'ease-out'});
+  }
+  function rowMotion(row, st){
+    var kf;
+    if (st === 'A') kf = [
+      {transform:'translateX(0) scale(1,1)'},
+      {transform:'translateX(0) scale(1.04,.93)', offset:.12},
+      {transform:'translateX(-8px) rotate(-1.5deg)', offset:.3},
+      {transform:'translateX(6px) rotate(1.2deg)', offset:.5},
+      {transform:'translateX(-4px)', offset:.7},
+      {transform:'translateX(2px)', offset:.86},
+      {transform:'translateX(0) scale(1,1)'}
+    ];
+    else if (st === 'O') kf = [
+      {transform:'rotate(0deg) scale(1)'},
+      {transform:'rotate(-3deg) scale(1.03)', offset:.25},
+      {transform:'rotate(2deg)', offset:.5},
+      {transform:'rotate(-1deg)', offset:.75},
+      {transform:'rotate(0deg) scale(1)'}
+    ];
+    else kf = [
+      {transform:'scale(1,1)'},
+      {transform:'scale(1.06,.9)', offset:.18},
+      {transform:'translateY(-9px) scale(.95,1.1)', offset:.45},
+      {transform:'translateY(0) scale(1.05,.94)', offset:.68},
+      {transform:'scale(.99,1.01)', offset:.85},
+      {transform:'scale(1,1)'}
+    ];
+    anim(row, kf, {duration:st === 'A' ? 460 : 520, easing:'ease-out'});
+  }
+
+  var wasEx = false;
+  list.addEventListener('click', function(){ wasEx = !badge.hidden; }, true);      /* runs before the page's own handler */
+  list.addEventListener('click', function(e){
+    var r0 = e.target.closest && e.target.closest('.row');
+    if (!r0){ wasEx = false; return; }
+    var nr = list.querySelector('.row[data-id="' + r0.dataset.id + '"]');
+    if (!nr){ wasEx = false; return; }
+    var st = nr.dataset.s || 'P', rn = nr.querySelector('.rn');
+    if (e.isTrusted){ look(e.clientX, e.clientY); poke(); }
+    if (FULL){
+      if (e.isTrusted) rowMotion(nr, st);       /* swipe commits have their own spring */
+      jelly(rn); showFace(nr, st);
+      if (st === 'A') react('gasp', 'gasp', 650);
+      else if (st === 'O') react('salute', 'ok', 900);
+      else react('wink', mood === 'sad' ? 'ok' : 'happy', 700);
+    }
+    if (wasEx && badge.hidden){                 /* the last absent / on-duty mark was just cleared */
+      cheer();
+    }
+    wasEx = false;
+  });
+
+  /* "Mark all present" confirmed */
+  var allBtn = $('#xAllP'), beforeAll = false;
+  if (allBtn){
+    allBtn.addEventListener('click', function(){ beforeAll = !badge.hidden; }, true);
+    allBtn.addEventListener('click', function(){
+      if (beforeAll && badge.hidden) cheer();
+      beforeAll = false;
+    });
+  }
+
+  /* ---------- 7. the ring boings, the bars slosh ---------- */
+  var ring = $('.ring'), rv = $('#ringVal'), lastOff = rv ? rv.getAttribute('stroke-dashoffset') : null;
+  if (rv && ring) new MutationObserver(function(){
+    var v = rv.getAttribute('stroke-dashoffset'); if (v === lastOff) return;
+    lastOff = v;
+    anim(ring, [
+      {transform:'scale(1)'},
+      {transform:'scale(1.12,.92)', offset:.25},
+      {transform:'scale(.96,1.05)', offset:.55},
+      {transform:'scale(1.02,.99)', offset:.8},
+      {transform:'scale(1)'}
+    ], {duration:560, easing:'ease-out'});
+  }).observe(rv, {attributes:true, attributeFilter:['stroke-dashoffset']});
+  ['#bP', '#bA', '#bO'].forEach(function(sel){
+    var i = $(sel); if (!i) return;
+    var bar = i.parentNode, last = i.style.width;
+    new MutationObserver(function(){
+      var w = i.style.width; if (w === last) return;
+      last = w; if (!FULL) return;
+      bar.classList.remove('slosh'); reflow(bar); bar.classList.add('slosh');
+      later(function(){ bar.classList.remove('slosh'); }, 1000);
+    }).observe(i, {attributes:true, attributeFilter:['style']});
+  });
+
+  /* ---------- 8. the selected day bounces like a ball, its neighbours squish ---------- */
+  var prevSel = null;
+  function weekMotion(){
+    var sel = week.querySelector('.day[aria-pressed="true"]'); if (!sel) return;
+    var d = sel.dataset.d, prev = prevSel; prevSel = d;
+    if (!FULL || !prev || prev === d) return;
+    var days = $$('#week .day'), idx = days.indexOf(sel);
+    var pb = week.querySelector('.day[data-d="' + prev + '"]');
+    if (pb){
+      var dx = pb.getBoundingClientRect().left - sel.getBoundingClientRect().left;
+      anim(sel, [
+        {transform:'translate(' + dx + 'px,-3px) scale(1,1)'},
+        {transform:'translate(' + dx * .5 + 'px,-30px) scale(.92,1.14)', offset:.38},
+        {transform:'translate(0,-3px) scale(1.14,.84)', offset:.62},
+        {transform:'translate(0,-12px) scale(.96,1.06)', offset:.78},
+        {transform:'translate(0,-3px) scale(1.03,.97)', offset:.92},
+        {transform:'translate(0,-3px) scale(1,1)'}
+      ], {duration:640, easing:'ease-out'});
+    } else {
+      anim(sel, [
+        {transform:'translateY(-36px) scale(.9,1.12)', opacity:0},
+        {transform:'translateY(-3px) scale(1.14,.84)', opacity:1, offset:.5},
+        {transform:'translateY(-12px) scale(.96,1.06)', offset:.72},
+        {transform:'translateY(-3px) scale(1.03,.97)', offset:.9},
+        {transform:'translateY(-3px) scale(1,1)'}
+      ], {duration:620, easing:'ease-out'});
+    }
+    days.forEach(function(b, i){
+      if (b === sel) return;
+      anim(b, [
+        {transform:'scale(1,1)'},
+        {transform:'scale(1.05,.86)', offset:.35},
+        {transform:'scale(.98,1.04)', offset:.7},
+        {transform:'scale(1,1)'}
+      ], {duration:520, delay:Math.abs(i - idx) * 45, easing:'ease-out'});
+    });
+  }
+  if (week){
+    var s0 = week.querySelector('.day[aria-pressed="true"]'); if (s0) prevSel = s0.dataset.d;
+    new MutationObserver(weekMotion).observe(week, {childList:true});
+  }
+
+  /* ---------- 11. dock icons hop ---------- */
+  function hopEl(el, delay){
+    anim(el, [
+      {transform:'translateY(0) scale(1,1)'},
+      {transform:'translateY(2px) scale(1.2,.78)', offset:.2},
+      {transform:'translateY(-13px) scale(.86,1.2)', offset:.48},
+      {transform:'translateY(0) scale(1.18,.84)', offset:.72},
+      {transform:'translateY(-3px) scale(.97,1.04)', offset:.86},
+      {transform:'translateY(0) scale(1,1)'}
+    ], {duration:640, delay:delay || 0, easing:'ease-out'});
+  }
+  $$('.dock button').forEach(function(b){
+    b.addEventListener('click', function(){
+      hopEl(b.querySelector('svg')); hopEl(b.querySelector('span'), 60);
+    });
+  });
+  window.CartoonFX.pip = pip; window.CartoonFX.hop = hop; window.CartoonFX.react = react; window.CartoonFX.hopEl = hopEl; window.CartoonFX.FULL = FULL; window.CartoonFX.look = look;
+})();
+</script>
+
+<script id="x-cartoon-js-2">
+/* ROUND 2 (new code only): 1 swipe hint  2 Pip leans + salutes  3 rubber-band row  4 names fly to Message
+   5 count flip  6 pull-to-refresh  7 empty-state shrug  9 search squint  10 copy tick  11 tag thud */
+(function(){
+  'use strict';
+  var F = window.CartoonFX; if (!F || !F.FULL || !F.pip) return;
+  var $ = function(s){ return document.querySelector(s); }, $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  var list = $('#list'), pip = F.pip; if (!list) return;
+  function anim(el, kf, o){ try { return el.animate(kf, o); } catch(e){ return null; } }
+  function rm(el){ if (el && el.parentNode) el.parentNode.removeChild(el); }
+
+  /* 1. first-time hint: the first row nudges left then right */
+  try {
+    if (!window.localStorage['cartoon-hint']){
+      window.localStorage['cartoon-hint'] = '1';
+      setTimeout(function(){
+        var r = list.querySelector('.row'); if (!r) return;
+        anim(r, [{transform:'translateX(0)'}, {transform:'translateX(-38px)', offset:.3}, {transform:'translateX(-38px)', offset:.45},
+                 {transform:'translateX(26px)', offset:.7}, {transform:'translateX(0)'}], {duration:1500, easing:'ease-in-out'});
+        F.react('wink', 'happy', 1200);
+      }, 1600);
+    }
+  } catch(e){}
+
+  /* 2 + 3. while swiping: row stretches like elastic, Pip leans, long pull = Pip salutes */
+  list.addEventListener('pointermove', function(){
+    var row = list.querySelector('.sw-drag'); if (!row) return;
+    var m = /translateX\((-?[\d.]+)px/.exec(row.style.transform), x = m ? +m[1] : 0, k = Math.min(Math.abs(x) / 110, 1);
+    row.style.transformOrigin = x < 0 ? '100% 50%' : '0 50%';
+    row.style.transform = 'translateX(' + x + 'px) scale(' + (1.03 + k * .06).toFixed(3) + ',' + (1.03 - k * .04).toFixed(3) + ')';
+    pip.style.rotate = Math.max(-12, Math.min(12, x * .1)) + 'deg';
+    if (document.querySelector('.sw-under.sw-o.armed') && pip.dataset.react !== 'salute') F.react('salute', 'ok', 1400);
+  });
+  function endSwipe(){
+    pip.style.rotate = '';
+    var row = list.querySelector('.sw-drag'); if (!row) return;
+    anim(row, [{scale:'1.07 .93'}, {scale:'.97 1.03', offset:.4}, {scale:'1.015 .99', offset:.7}, {scale:'1 1'}], {duration:520, easing:'ease-out'});
+    setTimeout(function(){ row.style.transformOrigin = ''; }, 650);
+  }
+  list.addEventListener('pointerup', endSwipe); list.addEventListener('pointercancel', endSwipe);
+
+  /* 4. an absent name flies to the Message tab */
+  var lastFly = {};
+  function fly(row){
+    var tab = $('.dock button[data-tab="message"]'), rn = row.querySelector('.rn'); if (!tab || !rn) return;
+    var a = rn.getBoundingClientRect(), b = tab.getBoundingClientRect();
+    var name = (row.querySelector('.rt b') || {}).textContent || ''; if (name.length > 16) name = name.slice(0, 15) + '…';
+    var c = document.createElement('i'); c.className = 'nchip'; c.textContent = name;
+    c.style.left = (a.left + a.width / 2) + 'px'; c.style.top = (a.top + a.height / 2) + 'px';
+    document.body.appendChild(c);
+    var dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2), T = 'translate(-50%,-50%) ';
+    var an = anim(c, [
+      {transform:T + 'scale(.4)', opacity:0},
+      {transform:T + 'scale(1.1)', opacity:1, offset:.15},
+      {transform:'translate(calc(-50% + ' + dx * .45 + 'px),calc(-50% + ' + (dy * .2 - 60) + 'px)) scale(1)', opacity:1, offset:.5},
+      {transform:'translate(calc(-50% + ' + dx + 'px),calc(-50% + ' + dy + 'px)) scale(.3)', opacity:.2}
+    ], {duration:800, easing:'cubic-bezier(.4,0,.6,1)', fill:'forwards'});
+    function done(){ if (!c.parentNode) return; rm(c); if (F.hopEl) F.hopEl(tab.querySelector('svg')); }
+    if (an) an.onfinish = done; setTimeout(done, 1200);
+  }
+  list.addEventListener('click', function(e){
+    var r0 = e.target.closest && e.target.closest('.row'); if (!r0) return;
+    var id = r0.dataset.id;
+    setTimeout(function(){                       /* wait for swipe commits (several clicks) to settle */
+      var cur = list.querySelector('.row[data-id="' + id + '"]'), now = Date.now();
+      if (!cur || cur.dataset.s !== 'A' || (lastFly[id] && now - lastFly[id] < 300)) return;
+      lastFly[id] = now; fly(cur);
+    }, 0);
+  });
+
+  /* 6. pull down at the top: Pip stretches and pulls a fresh list in */
+  var px = 0, py = null, armed = false;
+  function pullOn(){ var v = $('#view-mark'); return window.scrollY <= 0 && v && !v.hidden; }
+  document.addEventListener('touchstart', function(e){
+    py = (e.touches.length === 1 && pullOn()) ? e.touches[0].clientY : null; px = e.touches[0].clientX; armed = false;
+  }, {passive:true});
+  document.addEventListener('touchmove', function(e){
+    if (py === null) return;
+    var dy = e.touches[0].clientY - py, dx = e.touches[0].clientX - px;
+    if (dy <= 0 || Math.abs(dx) > dy || window.scrollY > 0) return;
+    pip.style.transition = 'none'; pip.style.scale = '1 ' + (1 + Math.min(dy, 110) / 110 * .4).toFixed(3);
+    var ar = dy >= 80; if (ar !== armed){ armed = ar; F.react(ar ? 'cheer' : 'wink', ar ? 'grin' : 'ok', 4000); }
+  }, {passive:true});
+  function pullEnd(){
+    if (py === null) return;
+    pip.style.transition = 'scale .45s cubic-bezier(.34,1.8,.5,1)'; pip.style.scale = '';
+    setTimeout(function(){ pip.style.transition = ''; }, 500);
+    if (armed){
+      var rows = $$('#list .row').slice(0, 16);
+      rows.forEach(function(r, i){ r.classList.add('rv'); r.classList.remove('in'); r.style.setProperty('--d', i * 40 + 'ms'); });
+      list.getBoundingClientRect();
+      rows.forEach(function(r){ r.classList.add('in'); });
+      F.hop(true); F.react('cheer', 'grin', 900);
+    } else if (pip.dataset.react) F.react('wink', 'ok', 300);
+    py = null; armed = false;
+  }
+  document.addEventListener('touchend', pullEnd, {passive:true}); document.addEventListener('touchcancel', pullEnd, {passive:true});
+
+  /* 7. empty filter: Pip shrugs */
+  new MutationObserver(function(){
+    var n = list.querySelector('.none'); if (!n || n._s) return; n._s = 1;
+    n.insertAdjacentHTML('afterbegin', '<div class="shrug" aria-hidden="true">🤷</div>');
+    F.react('wink', 'worried', 1400); F.hop(false);
+  }).observe(list, {childList:true});
+
+  /* 9. search: Pip squints through a magnifier, the matched row hops */
+  pip.insertAdjacentHTML('beforeend', '<i class="mag" aria-hidden="true">🔍</i>');
+  var q = $('#xq'); if (q) q.addEventListener('input', function(){ F.react('squint', 'ok', 1300); });
+  new MutationObserver(function(ms){
+    ms.forEach(function(m){
+      var t = m.target; if (!t.classList || !t.classList.contains('hit') || t._h) return;
+      t._h = 1; setTimeout(function(){ t._h = 0; }, 1000);
+      anim(t, [{transform:'translateY(0) scale(1)'}, {transform:'translateY(-8px) scale(1.04,.96)', offset:.4},
+               {transform:'translateY(0) scale(.98,1.03)', offset:.7}, {transform:'none'}], {duration:520, easing:'ease-out'});
+    });
+  }).observe(list, {attributes:true, attributeFilter:['class'], subtree:true});
+
+  /* 10. Copy flips to a tick */
+  var cb = $('#copyBtn');
+  if (cb) cb.addEventListener('click', function(){
+    if (cb._o) return; cb._o = cb.innerHTML;
+    cb.innerHTML = '<svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Copied';
+    anim(cb, [{transform:'scale(1)'}, {transform:'scale(1.2,.85)', offset:.3}, {transform:'scale(.92,1.1)', offset:.6}, {transform:'scale(1)'}], {duration:480, easing:'ease-out'});
+    setTimeout(function(){ cb.innerHTML = cb._o; cb._o = null; }, 1500);
+  });
+
+  /* 11. a dropped tag makes the message box thud */
+  var tpl = $('#tpl');
+  if (tpl) new MutationObserver(function(ms){
+    ms.forEach(function(m){ Array.prototype.forEach.call(m.removedNodes, function(n){
+      if (n.classList && n.classList.contains('ghost'))
+        anim(tpl, [{transform:'translateY(0) scale(1)'}, {transform:'translateY(4px) scale(1.012,.985)', offset:.3},
+                   {transform:'translateY(-2px) scale(.996,1.006)', offset:.6}, {transform:'none'}], {duration:420, easing:'ease-out'});
+    }); });
+  }).observe(document.body, {childList:true, subtree:true});
+  /* 12. scrolling in EITHER direction plays the drop-in for every row / card that comes into view */
+  if ('IntersectionObserver' in window){
+    var lastY = window.scrollY, lastS = 0;
+    window.addEventListener('scroll', function(){
+      if (window.scrollY !== lastY){ lastY = window.scrollY; lastS = performance.now(); }
+    }, {passive:true});
+    var busy = function(el){                                   /* the page's own first reveal is still playing: don't double up */
+      if (!el.getAnimations) return false;
+      return el.getAnimations().some(function(a){
+        return (a.animationName === 'rowDrop' || a.animationName === 'rvIn') && a.currentTime < 1100;
+      });
+    };
+    var moveIO = new IntersectionObserver(function(entries){
+      if (performance.now() - lastS > 500) return;             /* only react to real scrolling, not re-renders or tab switches */
+      var n = 0;
+      entries.forEach(function(en){
+        var el = en.target; if (!en.isIntersecting) return;
+        if (el.classList.contains('rv') && !el.classList.contains('in')) return;   /* never revealed yet: original code handles it */
+        if (busy(el)) return;
+        anim(el, [
+          {opacity:0, transform:'translateY(-28px) scale(.9,1.14)'},
+          {opacity:1, transform:'translateY(5px) scale(1.07,.9)', offset:.52},
+          {transform:'translateY(-3px) scale(.98,1.03)', offset:.72},
+          {opacity:1, transform:'none'}
+        ], {duration:780, delay:Math.min(n++, 8) * 45, easing:'ease-out', fill:'backwards'});
+      });
+    }, {threshold:.05, rootMargin:'0px 0px -6% 0px'});
+    var watchMove = function(){
+      $$('#list .row, #view-mark > :not(#list), #view-message .card, #view-template > .stack > .card').forEach(function(el){ moveIO.observe(el); });
+    };
+    watchMove();
+    new MutationObserver(watchMove).observe(list, {childList:true});
+  }
+})();
+</script>
+
+<script id="x-cartoon-js-3">
+/* ROUND 3 (new code only): 1 Pip intro  2 costumes  3 pendulum  4 toast mouth  6 attendance wave
+   7 balloon long-press  8 slot counters  9 ABSENT stamp  10 blinking circles  11 tilt sway  12 streak dance */
+(function(){
+  'use strict';
+  var F = window.CartoonFX; if (!F || !F.FULL || !F.pip) return;
+  var $ = function(s){ return document.querySelector(s); }, $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  var list = $('#list'), pip = F.pip, badge = $('#badge'), toast = $('#toast'), svg = pip.querySelector('svg'), lastScroll = 0;
+  if (!list || !svg) return;
+  function anim(el, kf, o){ try { return el.animate(kf, o); } catch(e){ return null; } }
+  function rm(el){ if (el && el.parentNode) el.parentNode.removeChild(el); }
+  function buzz(ms){ try { if (navigator.vibrate) navigator.vibrate(ms); } catch(e){} }
+  window.addEventListener('scroll', function(){ lastScroll = performance.now(); }, {passive:true});
+
+  /* 1. intro: Pip pops up from behind the card, then waves */
+  anim(pip, [
+    {transform:'translateY(54px) scale(.8,1.2)', opacity:0},
+    {transform:'translateY(-18px) scale(.92,1.15)', opacity:1, offset:.5},
+    {transform:'translateY(0) scale(1.12,.86)', offset:.72},
+    {transform:'translateY(0) scale(1,1)', opacity:1}
+  ], {duration:950, delay:350, fill:'backwards', easing:'ease-out'});
+  setTimeout(function(){ F.react('cheer', 'grin', 1100); }, 1500);
+
+  /* 2. costumes by time of day */
+  svg.insertAdjacentHTML('beforeend',
+    '<g class="cos sun"><rect x="22" y="22" width="19" height="13" rx="5" fill="#1c1c20"/><rect x="43" y="22" width="19" height="13" rx="5" fill="#1c1c20"/>' +
+    '<path d="M41 27h2" stroke="#1c1c20" stroke-width="2"/><path d="M25 25l6-1" stroke="#fff" stroke-opacity=".5" stroke-linecap="round" stroke-width="1.5"/></g>' +
+    '<g class="cos cap"><path d="M14 22 C18 6 40 -2 62 6 C54 8 40 12 30 22 Z" fill="#5b7cff"/>' +
+    '<path d="M12 24 Q36 14 64 8" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><circle cx="66" cy="8" r="4.5" fill="#fff"/></g>');
+  function tm(){ var h = new Date().getHours(); pip.dataset.tm = (h >= 11 && h < 16) ? 'day' : (h >= 21 || h < 5) ? 'night' : ''; }
+  tm(); setInterval(tm, 60000);
+
+  /* 3. pendulum: Pip swings with scroll speed and settles with a wobble */
+  var ang = 0, vel = 0, run = false, lastSY = window.scrollY;
+  function swing(){
+    vel += -0.12 * ang - 0.1 * vel; ang += vel; svg.style.rotate = ang.toFixed(2) + 'deg';
+    if (Math.abs(ang) > .05 || Math.abs(vel) > .05) requestAnimationFrame(swing); else { run = false; svg.style.rotate = ''; }
+  }
+  window.addEventListener('scroll', function(){
+    var y = window.scrollY, dy = y - lastSY; lastSY = y;
+    vel += Math.max(-3, Math.min(3, dy * -.05));
+    if (!run){ run = true; requestAnimationFrame(swing); }
+  }, {passive:true});
+
+  /* 4. Pip's mouth flaps while a toast is showing */
+  var mouth = pip.querySelector('.mouth'), fl = 0;
+  function stopFlap(){ if (fl){ clearInterval(fl); fl = 0; F.react('talk', 'happy', 10); } }
+  if (toast && mouth) new MutationObserver(function(){
+    if (!toast.classList.contains('show')){ stopFlap(); return; }
+    if (fl) return; var o = 0;
+    fl = setInterval(function(){
+      o ^= 1; mouth.setAttribute('d', o ? 'M37 38 Q42 48 47 38 Z' : 'M37 41 Q42 43 47 41'); mouth.setAttribute('fill', o ? '#7a2e00' : 'none');
+    }, 130);
+    setTimeout(stopFlap, 1400);
+  }).observe(toast, {attributes:true, attributeFilter:['class']});
+
+  /* 6 + 12. after "Mark all present" the rows hop in a wave; a clean week makes Pip dance */
+  function wave(){
+    var vh = innerHeight, n = 0;
+    $$('#list .row').forEach(function(r){
+      var q = r.getBoundingClientRect(); if (q.bottom < 0 || q.top > vh || n >= 24) return;
+      anim(r, [{transform:'translateY(0) scale(1,1)'}, {transform:'translateY(-14px) scale(.96,1.08)', offset:.4},
+               {transform:'translateY(2px) scale(1.04,.95)', offset:.7}, {transform:'none'}], {duration:520, delay:n * 45, easing:'ease-out'});
+      n++;
+    });
+  }
+  function dance(){
+    anim(pip, [
+      {transform:'translateY(0) rotate(0deg)'}, {transform:'translateY(-12px) rotate(-10deg) scale(.95,1.1)'},
+      {transform:'translateY(0) rotate(0deg) scale(1.1,.9)'}, {transform:'translateY(-12px) rotate(10deg) scale(.95,1.1)'},
+      {transform:'translateY(0) rotate(0deg) scale(1.1,.9)'}, {transform:'translateY(0) rotate(0deg)'}
+    ], {duration:960, iterations:2, easing:'ease-in-out'});
+    F.react('cheer', 'grin', 2000);
+  }
+  function weekClean(){ return !$('#week .day.has'); }
+  var allBtn = $('#xAllP'), pre = false;
+  if (allBtn){
+    allBtn.addEventListener('click', function(){ pre = badge ? !badge.hidden : false; }, true);
+    allBtn.addEventListener('click', function(){ if (pre && badge.hidden){ wave(); if (weekClean()) dance(); } pre = false; });
+  }
+  var wasEx = false;
+  list.addEventListener('click', function(){ wasEx = badge ? !badge.hidden : false; }, true);
+  list.addEventListener('click', function(){ if (wasEx && badge.hidden && weekClean()) dance(); wasEx = false; });
+
+  /* 7. long-press a name: the row inflates like a balloon, then squishes back (a long press doesn't change the mark) */
+  var hold = 0, hx = 0, hy = 0, ball = null, balloonRow = null, suppress = 0;
+  list.addEventListener('pointerdown', function(e){
+    var row = e.target.closest && e.target.closest('.row'); if (!row) return;
+    hx = e.clientX; hy = e.clientY; clearTimeout(hold);
+    hold = setTimeout(function(){
+      balloonRow = row; buzz(12);
+      ball = anim(row, [{scale:'1 1'}, {scale:'1.06 1.12', offset:.6}, {scale:'1.045 1.09'}], {duration:380, fill:'forwards', easing:'cubic-bezier(.34,1.6,.5,1)'});
+    }, 450);
+  });
+  list.addEventListener('pointermove', function(e){
+    if (hold && Math.hypot(e.clientX - hx, e.clientY - hy) > 8){ clearTimeout(hold); hold = 0; }
+  });
+  function release(){
+    clearTimeout(hold); hold = 0; if (!balloonRow) return;
+    var r = balloonRow; balloonRow = null; if (ball){ ball.cancel(); ball = null; }
+    suppress = performance.now() + 400;
+    anim(r, [{scale:'1.045 1.09'}, {scale:'.94 .9', offset:.35}, {scale:'1.03 1.04', offset:.6}, {scale:'1 1'}], {duration:520, easing:'ease-out'});
+  }
+  list.addEventListener('pointerup', release); list.addEventListener('pointercancel', release);
+  document.addEventListener('click', function(e){
+    if (performance.now() < suppress && e.target.closest && e.target.closest('#list .row')){ e.stopPropagation(); e.preventDefault(); suppress = 0; }
+  }, true);
+
+  /* 8. counters spin like a slot machine, then land with a bounce */
+  function spin(el){
+    if (el._sp) return;
+    var r = el.getBoundingClientRect(), cs = getComputedStyle(el), m = /^(\d+)(.*)$/.exec(el.textContent.trim());
+    if (!m || !r.width) return; el._sp = 1;
+    var ov = document.createElement('div'); ov.className = 'slot';
+    ov.style.cssText = 'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px;font-size:' + cs.fontSize +
+      ';font-weight:' + cs.fontWeight + ';font-family:' + cs.fontFamily + ';color:' + cs.color + ';letter-spacing:' + cs.letterSpacing +
+      ';justify-content:' + (cs.textAlign === 'center' ? 'center' : 'flex-start');
+    document.body.appendChild(ov); el.style.visibility = 'hidden';
+    var digits = m[1].length, n = 0;
+    var iv = setInterval(function(){
+      ov.textContent = String(Math.floor(Math.random() * Math.pow(10, digits))).padStart(digits, '0') + m[2];
+      if (++n > 7){
+        clearInterval(iv); rm(ov); el.style.visibility = ''; el._sp = 0;
+        anim(el, [{transform:'scale(1.4,.7)'}, {transform:'scale(.9,1.2)', offset:.4}, {transform:'scale(1.08,.96)', offset:.7}, {transform:'scale(1)'}], {duration:460, easing:'ease-out'});
+      }
+    }, 48);
+  }
+  ['#sP', '#sA', '#sO'].forEach(function(s){
+    var el = $(s); if (!el) return; var last = el.textContent;
+    new MutationObserver(function(){ if (el.textContent === last) return; last = el.textContent; spin(el); })
+      .observe(el, {childList:true, characterData:true, subtree:true});
+  });
+
+  /* 9. marking someone Absent stamps the row */
+  var lastSt = {};
+  function stamp(row){
+    var s = document.createElement('span'); s.className = 'stamp'; s.textContent = 'ABSENT'; row.appendChild(s);
+    var R = 'rotate(-14deg) ';
+    var a = anim(s, [
+      {transform:R + 'scale(2.6)', opacity:0}, {transform:R + 'scale(.92)', opacity:1, offset:.3}, {transform:R + 'scale(1.05)', offset:.42},
+      {transform:R + 'scale(1)', opacity:1, offset:.55}, {transform:R + 'scale(1)', opacity:1, offset:.82}, {transform:R + 'scale(1)', opacity:0}
+    ], {duration:1300, fill:'forwards'});
+    if (a) a.onfinish = function(){ rm(s); }; setTimeout(function(){ rm(s); }, 1700);
+    anim(row, [{transform:'translateY(0)'}, {transform:'translateY(4px)', offset:.4}, {transform:'translateY(0)'}], {duration:240, delay:380, easing:'ease-out'});
+  }
+  list.addEventListener('click', function(e){
+    var r0 = e.target.closest && e.target.closest('.row'); if (!r0) return; var id = r0.dataset.id;
+    setTimeout(function(){
+      var cur = list.querySelector('.row[data-id="' + id + '"]'), now = Date.now();
+      if (!cur || cur.dataset.s !== 'A' || (lastSt[id] && now - lastSt[id] < 300)) return;
+      lastSt[id] = now; stamp(cur);
+    }, 0);
+  });
+
+  /* 10. every few seconds a roll-number circle blinks like a face */
+  var EYES = '<svg class="face" viewBox="0 0 40 40" aria-hidden="true"><g fill="currentColor"><circle class="e" cx="14" cy="19" r="2.6"/><circle class="e" cx="26" cy="19" r="2.6"/></g>' +
+             '<path d="M13 27 Q20 33 27 27" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
+  setInterval(function(){
+    var v = $('#view-mark'); if (document.hidden || performance.now() - lastScroll < 1500 || !v || v.hidden) return;
+    var vh = innerHeight, rows = $$('#list .row').filter(function(r){ var q = r.getBoundingClientRect(); return q.top > 60 && q.bottom < vh - 80; });
+    if (!rows.length) return;
+    var rn = rows[Math.floor(Math.random() * rows.length)].querySelector('.rn'); if (!rn || rn.querySelector('.face')) return;
+    rn.insertAdjacentHTML('beforeend', EYES); rn.classList.add('has-face');
+    var f = rn.querySelector('.face');
+    anim(f, [{opacity:0, transform:'scale(.6)'}, {opacity:1, transform:'scale(1)'}], {duration:180, fill:'forwards'});
+    Array.prototype.forEach.call(f.querySelectorAll('.e'), function(c){
+      anim(c, [{transform:'scaleY(1)'}, {transform:'scaleY(.1)', offset:.3}, {transform:'scaleY(1)', offset:.45}, {transform:'scaleY(.1)', offset:.7}, {transform:'scaleY(1)'}], {duration:900});
+    });
+    setTimeout(function(){ rm(f); rn.classList.remove('has-face'); }, 950);
+  }, 3800);
+
+  /* 11. tilt the phone: cards sway a little and Pip's eyes follow */
+  var tx = 0, ty = 0;
+  function ori(e){
+    if (e.gamma == null) return;
+    var gx = Math.max(-25, Math.min(25, e.gamma)), gy = Math.max(-25, Math.min(25, (e.beta || 45) - 45));
+    tx += (-gy / 25 * 2.5 - tx) * .25; ty += (gx / 25 * 3 - ty) * .25;
+    var s = document.documentElement.style; s.setProperty('--tx', tx.toFixed(2) + 'deg'); s.setProperty('--ty', ty.toFixed(2) + 'deg');
+    document.body.classList.add('tilt');
+    if (F.look) F.look(innerWidth / 2 + gx * 14, innerHeight / 2 + gy * 10);
+  }
+  if (window.DeviceOrientationEvent){
+    if (typeof DeviceOrientationEvent.requestPermission === 'function'){
+      document.addEventListener('pointerdown', function once(){
+        document.removeEventListener('pointerdown', once);
+        DeviceOrientationEvent.requestPermission().then(function(r){ if (r === 'granted') window.addEventListener('deviceorientation', ori); }).catch(function(){});
+      });
+    } else window.addEventListener('deviceorientation', ori);
+  }
+})();
+</script>
+
+<script id="x-characters-js">
+/* NEW CHARACTERS (new file, new code only). Zip the plane pilot and the bar buddies. */
+(function(){
+  'use strict';
+  var $ = function(s){ return document.querySelector(s); };
+  var FULL = typeof Element.prototype.animate === 'function' &&
+             !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function anim(el, kf, o){ if (!FULL || !el) return null; try { return el.animate(kf, o); } catch(e){ return null; } }
+  var INK = '#7a2e00';
+
+  /* ---------- Zip: replaces the plane icon on the Share button, and the plane that flies off ---------- */
+  var ZIP =
+    '<path d="M2 9 L11 13 L22 2 Z" style="fill:#fff;stroke:' + INK + ';stroke-width:1.3;stroke-linejoin:round"/>' +
+    '<g class="zw"><path d="M22 2 L15 22 L11 13 Z" style="fill:#ffe3c2;stroke:' + INK + ';stroke-width:1.3;stroke-linejoin:round"/></g>' +
+    '<path d="M22 2 L11 13" style="fill:none;stroke:' + INK + ';stroke-width:1.1;stroke-linecap:round"/>' +
+    '<circle cx="17.6" cy="6.4" r="2.6" style="fill:#fff;stroke:#ee6a00;stroke-width:1.5"/>' +
+    '<circle cx="14.1" cy="9.7" r="2.6" style="fill:#fff;stroke:#ee6a00;stroke-width:1.5"/>' +
+    '<circle cx="17.9" cy="6.7" r="1.05" style="fill:#1c1c20;stroke:none"/><circle cx="14.4" cy="10" r="1.05" style="fill:#1c1c20;stroke:none"/>';
+  var ic = $('#shareBtn svg');
+  if (ic){ ic.setAttribute('viewBox', '0 0 24 24'); ic.setAttribute('class', (ic.getAttribute('class') || '') + ' zip'); ic.innerHTML = ZIP; }
+  new MutationObserver(function(ms){                       /* the plane that takes off becomes Zip too */
+    ms.forEach(function(m){ Array.prototype.forEach.call(m.addedNodes, function(n){
+      if (n.classList && n.classList.contains('plane-fly')) n.innerHTML = ZIP;
+    }); });
+  }).observe(document.body, {childList:true});
+
+  /* ---------- bar buddies: a rocket, a snail and a guard ride the ends of the bars ---------- */
+  var S = 'style="stroke:' + INK + ';stroke-width:1.2;stroke-linejoin:round;stroke-linecap:round;';
+  var BUD = {
+    bP: {cls:'rocket', svg:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="fl" d="M6 12 L0 8.5 L3 12 L0 15.5 Z" style="fill:#ffb23d;stroke:none"/>' +
+      '<path d="M7 9 L3 5.5 L8 11 Z" ' + S + 'fill:#ee6a00"/><path d="M7 15 L3 18.5 L8 13 Z" ' + S + 'fill:#ee6a00"/>' +
+      '<path d="M5.5 12 Q13 4.5 22 12 Q13 19.5 5.5 12 Z" ' + S + 'fill:#fff"/><path d="M17.5 8.2 Q21 9.5 22 12 Q21 14.5 17.5 15.8 Q19.5 12 17.5 8.2 Z" style="fill:#ee6a00;stroke:none"/>' +
+      '<circle cx="12.5" cy="12" r="2.2" ' + S + 'fill:#8fc7ff"/></svg>'},
+    bA: {cls:'snail', svg:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 19 Q3 14.5 9 16.5 L20 16.5 Q22.5 17 22 19 Z" ' + S + 'fill:#e8d6b8"/>' +
+      '<circle cx="11" cy="11.5" r="6.2" ' + S + 'fill:#ffb23d"/><path d="M11 11.5 m-2.6 0 a2.6 2.6 0 1 1 2.6 2.6 a1.3 1.3 0 0 1 -1.3 -1.3" style="fill:none;stroke:' + INK + ';stroke-width:1.1;stroke-linecap:round"/>' +
+      '<g class="sn-e"><path d="M19.5 16.5 L20 10" style="stroke:' + INK + ';stroke-width:1.1;stroke-linecap:round"/><circle cx="20" cy="9.4" r="1.5" style="fill:#fff;stroke:' + INK + ';stroke-width:1"/></g>' +
+      '<g class="sn-e" style="animation-delay:-.6s"><path d="M16.5 16.5 L16.2 11" style="stroke:' + INK + ';stroke-width:1.1;stroke-linecap:round"/><circle cx="16.2" cy="10.4" r="1.5" style="fill:#fff;stroke:' + INK + ';stroke-width:1"/></g></svg>'},
+    bO: {cls:'guard', svg:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><g class="lg"><path d="M10.2 17.5 V22" style="stroke:' + INK + ';stroke-width:2;stroke-linecap:round"/></g>' +
+      '<g class="lg lg2"><path d="M13.8 17.5 V22" style="stroke:' + INK + ';stroke-width:2;stroke-linecap:round"/></g>' +
+      '<path d="M8.3 11.5 H15.7 V18 H8.3 Z" ' + S + 'fill:#3b5bdb"/><circle cx="12" cy="14.6" r="1.4" style="fill:#ffd43d;stroke:none"/>' +
+      '<circle cx="12" cy="7.8" r="4" ' + S + 'fill:#ffd9b0"/><path d="M7.4 7.2 Q12 0.8 16.6 7.2 Z" ' + S + 'fill:#3b5bdb"/>' +
+      '<path d="M6.6 7.4 H17.4" style="stroke:' + INK + ';stroke-width:1.4;stroke-linecap:round"/>' +
+      '<circle cx="10.4" cy="9" r=".7" style="fill:#1c1c20;stroke:none"/><circle cx="13.6" cy="9" r=".7" style="fill:#1c1c20;stroke:none"/></svg>'}
+  };
+  Object.keys(BUD).forEach(function(id){
+    var fill = $('#' + id); if (!fill) return;
+    var bar = fill.parentNode, stat = bar.parentNode, b = document.createElement('span');
+    b.className = 'bud ' + BUD[id].cls; b.setAttribute('aria-hidden', 'true'); b.innerHTML = BUD[id].svg; stat.appendChild(b);
+    function place(){
+      var pct = Math.max(0, Math.min(100, parseFloat(fill.style.width) || 0)) / 100, size = 22;
+      var x = bar.offsetLeft + pct * bar.offsetWidth - size * .55;
+      x = Math.max(bar.offsetLeft - 2, Math.min(bar.offsetLeft + bar.offsetWidth - size + 3, x));
+      b.style.left = x + 'px'; b.style.top = (bar.offsetTop + bar.offsetHeight / 2 - size / 2 - 3) + 'px';
+      b.classList.toggle('full', pct >= .995);
+    }
+    place();
+    new MutationObserver(function(){
+      place();
+      anim(b, [{transform:'scale(1)'}, {transform:'scale(1.3,.8)', offset:.25}, {transform:'scale(.9,1.15)', offset:.55}, {transform:'scale(1)'}], {duration:520, easing:'ease-out'});
+    }).observe(fill, {attributes:true, attributeFilter:['style']});
+    if (window.ResizeObserver) new ResizeObserver(place).observe(bar);
+    window.addEventListener('resize', place);
+  });
+})();
+</script>
+
 </body>
 </html>
