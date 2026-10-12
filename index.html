@@ -3565,5 +3565,338 @@ body{overflow-x:clip}
 })();
 </script>
 
+
+<script id="x-update-js">
+/* =====================================================================
+   UPDATE BUTTON (new code only). It takes the place of "Reset day".
+   Tapping Update sends the day's marks to Supabase, and only then.
+   Update works only for today's date. Other days can be viewed and
+   marked on this device, but not sent.
+   Mark all present still works on this device, as before.
+   ===================================================================== */
+(function(){
+  'use strict';
+  var $ = function(s){ return document.querySelector(s); };
+
+  /* SETUP: paste the same Supabase project details that faculty.html uses */
+  var SUPA_URL = 'https://mowutvxqaemogaxgaqwp.supabase.co';   // e.g. https://abcdxyz.supabase.co
+  var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vd3V0dnhxYWVtb2dheGdhcXdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NjA5MTcsImV4cCI6MjEwNzMzNjkxN30.F4E2HL30mzEk7AVj3-3xwDVdZzCUvy74o6tNpRNsF6M';   // the public anon / publishable key (never the service key)
+  var STORE_KEY = 'attendance-glass-v1';
+
+  var btn = $('#resetDay'), label = $('#resetLabel'), dateInput = $('#date'), toastEl = $('#toast');
+  if (!btn || !label || !dateInput || !toastEl) return;
+
+  var busy = false, toastTimer;
+  function say(t){
+    toastEl.textContent = t; toastEl.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 2600);
+  }
+
+  /* the button only works for today's date (device's local date) */
+  function pad(n){ return String(n).padStart(2, '0'); }
+  function todayYmd(){ var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function isToday(){ return dateInput.value === todayYmd(); }
+
+  var style = document.createElement('style');
+  style.textContent = '#resetDay.not-today{opacity:.5}';
+  document.head.appendChild(style);
+  function syncUpdate(){
+    var ok = isToday();
+    btn.classList.toggle('not-today', !ok);
+    btn.title = ok ? '' : "Update works only for today's attendance";
+  }
+
+  /* keep the label on "Update"; the page's own code writes "Reset day" into it */
+  function lockLabel(){ if (label.textContent !== 'Update') label.textContent = 'Update'; }
+  new MutationObserver(lockLabel).observe(label, {childList:true, characterData:true, subtree:true});
+  lockLabel();
+
+  /* upload icon in place of the reset arrow */
+  var ic = btn.querySelector('svg');
+  if (ic) ic.innerHTML = '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>';
+
+  /* a real tap on the button is an update; code-generated clicks (Mark all present) pass through */
+  document.addEventListener('click', function(e){
+    if (!e.isTrusted) return;
+    var t = e.target.closest && e.target.closest('#resetDay');
+    if (!t) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (!isToday()){ say("You can update only today's attendance."); return; }
+    pushUpdate();
+  }, true);
+
+  /* keep the look in step with the date: arrows, week strip, date picker */
+  document.addEventListener('click', function(){ setTimeout(syncUpdate, 0); }, true);
+  dateInput.addEventListener('change', syncUpdate);
+  setInterval(syncUpdate, 1000);
+  /* ---------- load saved marks from Supabase (so any device shows them) ---------- */
+  function addDaysYmd(ymd, n){
+    var p = ymd.split('-').map(Number), d = new Date(p[0], p[1] - 1, p[2] + n);
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  async function loadFromServer(){
+    if (!SUPA_URL || !SUPA_KEY) return;
+    var today = todayYmd(), from = addDaysYmd(today, -60);
+    try {
+      var headers = { 'Content-Type': 'application/json', apikey: SUPA_KEY };
+      if (SUPA_KEY.indexOf('eyJ') === 0) headers.Authorization = 'Bearer ' + SUPA_KEY;
+      var res = await fetch(SUPA_URL + '/rest/v1/rpc/attendance_range', {
+        method: 'POST', headers: headers, body: JSON.stringify({ p_from: from, p_to: today })
+      });
+      if (!res.ok) return;
+      var data = await res.json();
+      var store = {};
+      try { store = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch(e){}
+      store.marks = store.marks || {};
+      var before = JSON.stringify(store.marks);
+
+      /* days that were submitted take the saved state exactly */
+      var byDay = {};
+      (data.marks || []).forEach(function(r){
+        (byDay[r.day] = byDay[r.day] || {})['s' + r.roll] = r.status;
+      });
+      (data.days || []).forEach(function(day){ store.marks[day] = byDay[day] || {}; });
+
+      if (JSON.stringify(store.marks) !== before){
+        localStorage.setItem(STORE_KEY, JSON.stringify(store));
+        location.reload();   /* the page reads its marks once at startup, so reload to show them */
+      }
+    } catch(err){ /* offline: keep what this device has */ }
+  }
+  loadFromServer();
+
+  syncUpdate();
+
+  /* only absent and on-duty go up; everyone else is present by default */
+  function marksFor(day){
+    var all = {}, out = [];
+    try { all = (JSON.parse(localStorage.getItem(STORE_KEY)) || {}).marks || {}; } catch(e){}
+    var m = all[day] || {};
+    Object.keys(m).forEach(function(id){
+      var roll = parseInt(String(id).replace(/\D/g, ''), 10);
+      if (roll && (m[id] === 'A' || m[id] === 'O')) out.push({roll: roll, status: m[id]});
+    });
+    return out.sort(function(a, b){ return a.roll - b.roll; });
+  }
+
+  async function pushUpdate(){
+    if (busy) return;
+    if (!SUPA_URL || !SUPA_KEY){ say('Not connected yet. Add the Supabase details in this file.'); return; }
+    var day = dateInput.value;
+    busy = true; btn.disabled = true; say('Updating...');
+    try {
+      var headers = { 'Content-Type': 'application/json', apikey: SUPA_KEY };
+      if (SUPA_KEY.indexOf('eyJ') === 0) headers.Authorization = 'Bearer ' + SUPA_KEY;
+      var res = await fetch(SUPA_URL + '/rest/v1/rpc/attendance_submit', {
+        method: 'POST', headers: headers,
+        body: JSON.stringify({ p_day: day, p_marks: marksFor(day) })
+      });
+      if (!res.ok) throw new Error('http ' + res.status);
+      say('Updated. Faculty can see it now.');
+    } catch(err){
+      say('Not saved. Check the connection and tap Update again.');
+    } finally {
+      busy = false; btn.disabled = false; syncUpdate();
+    }
+  }
+})();
+</script>
+
+<style id="x-ux-css">
+/* UX (new file): clearer small text, status and hint lines */
+.small{color:#4f4f58;font-size:.9rem}
+.muted{color:#2e2e36;font-size:.96rem}
+.chip small,.sec h2 small{color:#4f4f58}
+.uxHint{font-size:.9rem;color:#4f4f58;margin:-4px 0 6px}
+.uxStatus{font-size:.95rem;color:#1c1c20;font-weight:600;margin:0 0 14px}
+.uxStatus.bad{color:#c25200}
+/* the Preview card is removed from the Template tab */
+#view-template .card:has(#preview){display:none}
+</style>
+<script id="x-ux-js">
+/* UX (new file): save status, update hint, longer save messages, no Preview card.
+   Existing code is not changed; this only reads the page and its saved data. */
+(function(){
+  'use strict';
+  var $ = function(s){ return document.querySelector(s); };
+  var SUPA_URL = 'https://mowutvxqaemogaxgaqwp.supabase.co', SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vd3V0dnhxYWVtb2dheGdhcXdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NjA5MTcsImV4cCI6MjEwNzMzNjkxN30.F4E2HL30mzEk7AVj3-3xwDVdZzCUvy74o6tNpRNsF6M';
+  var STORE_KEY = 'attendance-glass-v1', SNAP_KEY = 'att.saved.v1';
+  var btn = $('#resetDay'), dateInput = $('#date'), toastEl = $('#toast');
+  if (!btn || !dateInput) return;
+
+  function pad(n){ return String(n).padStart(2, '0'); }
+  function todayYmd(){ var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function readSnap(){ try { return JSON.parse(localStorage.getItem(SNAP_KEY)) || {}; } catch(e){ return {}; } }
+  function writeSnap(o){ try { localStorage.setItem(SNAP_KEY, JSON.stringify(o)); } catch(e){} }
+  function localMarks(day){
+    try { var m = (JSON.parse(localStorage.getItem(STORE_KEY)) || {}).marks || {}; return m[day] || {}; } catch(e){ return {}; }
+  }
+  /* page ids look like s12; saved rows use the roll number 12 */
+  function normalize(marks){
+    var o = {};
+    Object.keys(marks).forEach(function(id){
+      if (marks[id] === 'A' || marks[id] === 'O') o[String(id).replace(/\D/g, '')] = marks[id];
+    });
+    return o;
+  }
+  function diffCount(a, b){
+    var keys = {};
+    Object.keys(a).concat(Object.keys(b)).forEach(function(k){ keys[k] = true; });
+    return Object.keys(keys).filter(function(k){ return a[k] !== b[k]; }).length;
+  }
+  function timeStr(iso){ return new Date(iso).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'}); }
+
+  /* ---------- status line and hint under the Students heading ---------- */
+  var sec = btn.closest('.sec');
+  var statusEl = document.createElement('p'); statusEl.className = 'uxStatus'; statusEl.setAttribute('role', 'status');
+  var hintEl = document.createElement('p'); hintEl.className = 'uxHint';
+  hintEl.textContent = 'Update works for today only. Past dates can be viewed.';
+  if (sec){ sec.insertAdjacentElement('afterend', statusEl); sec.insertAdjacentElement('afterend', hintEl); }
+
+  function refreshStatus(){
+    if (!statusEl.isConnected) return;
+    var day = dateInput.value, local = normalize(localMarks(day));
+    var snap = readSnap()[day], isToday = day === todayYmd();
+    var text, bad = false;
+    if (!snap){
+      text = isToday ? 'Not saved yet. Tap Update to send to faculty.' : 'Not saved.';
+      bad = true;
+    } else {
+      var n = diffCount(local, snap.marks || {});
+      if (n === 0) text = snap.at ? 'Saved at ' + timeStr(snap.at) : 'Saved';
+      else {
+        text = n + (n === 1 ? ' change' : ' changes') + ' not saved' + (isToday ? '. Tap Update to save.' : '. Only today can be updated.');
+        bad = true;
+      }
+    }
+    if (statusEl.textContent !== text) statusEl.textContent = text;
+    statusEl.classList.toggle('bad', bad);
+  }
+
+  /* ---------- remember what the server holds ---------- */
+  function rememberRange(data){
+    var o = readSnap(), byDay = {};
+    (data.marks || []).forEach(function(r){ (byDay[r.day] = byDay[r.day] || {})[String(r.roll)] = r.status; });
+    (data.days || []).forEach(function(d){
+      o[d] = { marks: byDay[d] || {}, at: (o[d] && o[d].at) || null };
+    });
+    writeSnap(o);
+  }
+  function loadSnap(){
+    if (!SUPA_URL || !SUPA_KEY) { refreshStatus(); return; }
+    var t = todayYmd(), p = t.split('-').map(Number), f = new Date(p[0], p[1] - 1, p[2] - 60);
+    var from = f.getFullYear() + '-' + pad(f.getMonth() + 1) + '-' + pad(f.getDate());
+    var headers = { 'Content-Type': 'application/json', apikey: SUPA_KEY };
+    if (SUPA_KEY.indexOf('eyJ') === 0) headers.Authorization = 'Bearer ' + SUPA_KEY;
+    fetch(SUPA_URL + '/rest/v1/rpc/attendance_range', { method: 'POST', headers: headers, body: JSON.stringify({ p_from: from, p_to: t }) })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(data){ if (data) rememberRange(data); refreshStatus(); })
+      .catch(function(){ refreshStatus(); });
+  }
+
+  /* a successful Update records exactly what was sent */
+  var origFetch = window.fetch;
+  window.fetch = function(input, init){
+    var url = typeof input === 'string' ? input : (input && input.url) || '';
+    var p = origFetch.apply(this, arguments);
+    if (url.indexOf('/rest/v1/rpc/attendance_submit') >= 0 && init && init.body){
+      var body = JSON.parse(init.body);
+      p.then(function(res){
+        if (!res.ok) return;
+        var mk = {};
+        (body.p_marks || []).forEach(function(r){ mk[String(r.roll)] = r.status; });
+        var o = readSnap(); o[body.p_day] = { marks: mk, at: new Date().toISOString() };
+        writeSnap(o); refreshStatus();
+      }).catch(function(){});
+    }
+    return p;
+  };
+
+  dateInput.addEventListener('change', refreshStatus);
+  document.addEventListener('click', function(){ setTimeout(refreshStatus, 0); }, true);
+  setInterval(refreshStatus, 800);
+  loadSnap();
+
+  /* ---------- keep save and error messages on screen longer ---------- */
+  var IMPORTANT = /^(Updated|Not saved|Not connected|You can update only)/;
+  var keeping = false, adding = false, keepTimer;
+  if (toastEl){
+    new MutationObserver(function(){
+      if (adding) return;
+      var show = toastEl.classList.contains('show'), text = toastEl.textContent;
+      if (show && IMPORTANT.test(text)){
+        keeping = true; clearTimeout(keepTimer);
+        keepTimer = setTimeout(function(){ keeping = false; adding = true; toastEl.classList.remove('show'); adding = false; }, 6000);
+      } else if (!show && keeping && IMPORTANT.test(text)){
+        adding = true; toastEl.classList.add('show'); adding = false;
+      }
+    }).observe(toastEl, {attributes: true, attributeFilter: ['class'], childList: true, characterData: true, subtree: true});
+  }
+})();
+</script>
+<style id="x-legend-css">
+/* Legend on one line (new file): the three taps labels stay side by side on a phone */
+.legend-row{display:flex;flex-wrap:nowrap;gap:6px;justify-content:space-between}
+.lg{flex:1 1 0;min-width:0;justify-content:center;gap:5px;padding:6px 8px;font-size:.8rem;white-space:nowrap}
+.lg i{width:8px;height:8px}
+.lg small{font-size:.66rem;white-space:nowrap}
+</style>
+<style id="x-anim-css">
+/* Animations (new file). All motion is off when the phone asks for reduced motion. */
+@media (prefers-reduced-motion:no-preference){
+  /* components that did not float before now float gently too */
+  .lg,.uxStatus,.uxHint{animation:floatD 4.6s ease-in-out infinite}
+  .lg:nth-child(2n){animation-name:floatB;animation-duration:5.2s;animation-delay:-1.4s}
+  .lg:nth-child(3n){animation-duration:3.9s;animation-delay:-2.6s}
+
+  @keyframes uxPopIn{0%{opacity:0;transform:translateY(6px) scale(.96)}60%{opacity:1;transform:translateY(-2px) scale(1.02)}100%{opacity:1;transform:none}}
+  @keyframes uxOkRing{0%{box-shadow:0 0 0 0 rgba(52,199,89,.6)}100%{box-shadow:0 0 0 16px rgba(52,199,89,0)}}
+  @keyframes uxShake{0%,100%{translate:0 0}20%{translate:-8px 0}40%{translate:8px 0}60%{translate:-5px 0}80%{translate:4px 0}}
+
+  /* status line pops in whenever it changes (Saved / N changes not saved) */
+  .uxStatus.uxPop{animation:uxPopIn .45s cubic-bezier(.2,.8,.2,1) both,floatD 4.6s ease-in-out infinite}
+  /* Update button: green ring when saved, shake when not saved */
+  #resetDay.uxOk{animation:uxOkRing .9s ease-out 1}
+  #resetDay.uxShake{animation:uxShake .5s ease-in-out 1}
+  /* a row that changes its status gives a small bounce */
+  .row.bump{animation:uxPopIn .35s cubic-bezier(.2,.8,.2,1)}
+}
+</style>
+<script id="x-anim-js">
+/* Animations (new file): plays the effects above; it does not change the page's own code. */
+(function(){
+  'use strict';
+  var btn = document.querySelector('#resetDay'), statusEl = document.querySelector('.uxStatus');
+  if (!btn) return;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function restart(el, cls){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+
+  /* status line pops in when its text changes */
+  if (statusEl){
+    var last = statusEl.textContent;
+    new MutationObserver(function(){
+      if (statusEl.textContent === last) return;
+      last = statusEl.textContent;
+      if (!reduce) restart(statusEl, 'uxPop');
+    }).observe(statusEl, {childList: true, characterData: true, subtree: true});
+  }
+
+  /* Update: green ring on success, shake on failure */
+  var prevFetch = window.fetch;
+  window.fetch = function(input, init){
+    var url = typeof input === 'string' ? input : (input && input.url) || '';
+    var p = prevFetch.apply(this, arguments);
+    if (url.indexOf('/rest/v1/rpc/attendance_submit') >= 0 && !reduce){
+      p.then(function(res){
+        restart(btn, res.ok ? 'uxOk' : 'uxShake');
+      }, function(){ restart(btn, 'uxShake'); });
+    }
+    return p;
+  };
+  btn.addEventListener('animationend', function(e){
+    if (e.animationName === 'uxOkRing' || e.animationName === 'uxShake') btn.classList.remove('uxOk', 'uxShake');
+  });
+})();
+</script>
 </body>
 </html>
